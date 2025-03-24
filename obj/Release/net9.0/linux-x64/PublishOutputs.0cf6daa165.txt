@@ -1,0 +1,2 @@
+/home/ruzen42/src/ruzenbot/build/ruzenbot.pdb
+/home/ruzen42/src/ruzenbot/build/ruzenbot
