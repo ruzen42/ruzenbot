@@ -1,2 +1,5 @@
-.stack-work/
-*~
+obj 
+bin 
+publish
+.env
+.txt
