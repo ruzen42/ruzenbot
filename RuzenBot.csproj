@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NeoSimpleLogger" Version="1.2.3" />
+    <PackageReference Include="Telegram.Bot" Version="22.5.1" />
+  </ItemGroup>
+
 </Project>

@@ -43,6 +43,16 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
+          "dependencies": {
+            "NeoSimpleLogger": {
+              "target": "Package",
+              "version": "[1.2.3, )"
+            },
+            "Telegram.Bot": {
+              "target": "Package",
+              "version": "[22.5.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
