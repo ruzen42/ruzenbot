@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "NMrYq9UyLmk=",
+  "dgSpecHash": "oNBmYWwA4Ps=",
   "success": true,
-  "projectFilePath": "/home/ruzen42/src/RuzenBot/RuzenBot.csproj",
+  "projectFilePath": "/home/ruzen42/src/ruzenbot/RuzenBot.csproj",
   "expectedPackageFiles": [
+    "/home/ruzen42/.nuget/packages/dotenv.net/3.2.1/dotenv.net.3.2.1.nupkg.sha512",
     "/home/ruzen42/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
     "/home/ruzen42/.nuget/packages/microsoft.extensions.configuration.binder/8.0.0/microsoft.extensions.configuration.binder.8.0.0.nupkg.sha512",
     "/home/ruzen42/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",

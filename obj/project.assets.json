@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net9.0": {
+      "dotenv.net/3.2.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.1/dotenv.net.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.1/dotenv.net.dll": {}
+        }
+      },
       "Microsoft.Extensions.Configuration.Abstractions/8.0.0": {
         "type": "package",
         "dependencies": {
@@ -160,6 +169,21 @@
     }
   },
   "libraries": {
+    "dotenv.net/3.2.1": {
+      "sha512": "2fc2s5PH6wAoWQ8bpyVgz28y9qMs/t8ToiCKqSM6mWpjgg4QQSPtZ0nia0x/OebGLSDbxyOelVH+fULZH7N4mA==",
+      "type": "package",
+      "path": "dotenv.net/3.2.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "dotenv.net.3.2.1.nupkg.sha512",
+        "dotenv.net.nuspec",
+        "lib/netstandard1.6/dotenv.net.dll",
+        "lib/netstandard2.0/dotenv.net.dll",
+        "lib/netstandard2.1/dotenv.net.dll"
+      ]
+    },
     "Microsoft.Extensions.Configuration.Abstractions/8.0.0": {
       "sha512": "3lE/iLSutpgX1CC0NOW70FJoGARRHbyKmG7dc0klnUZ9Dd9hS6N/POPWhKhMLCEuNN5nXEY5agmlFtH562vqhQ==",
       "type": "package",
@@ -481,7 +505,8 @@
   "projectFileDependencyGroups": {
     "net9.0": [
       "NeoSimpleLogger >= 1.2.3",
-      "Telegram.Bot >= 22.5.1"
+      "Telegram.Bot >= 22.5.1",
+      "dotenv.net >= 3.2.1"
     ]
   },
   "packageFolders": {
@@ -490,11 +515,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/ruzen42/src/RuzenBot/RuzenBot.csproj",
+      "projectUniqueName": "/home/ruzen42/src/ruzenbot/RuzenBot.csproj",
       "projectName": "RuzenBot",
-      "projectPath": "/home/ruzen42/src/RuzenBot/RuzenBot.csproj",
+      "projectPath": "/home/ruzen42/src/ruzenbot/RuzenBot.csproj",
       "packagesPath": "/home/ruzen42/.nuget/packages/",
-      "outputPath": "/home/ruzen42/src/RuzenBot/obj/",
+      "outputPath": "/home/ruzen42/src/ruzenbot/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/ruzen42/.nuget/NuGet/NuGet.Config"
@@ -521,7 +546,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -534,6 +559,10 @@
           "Telegram.Bot": {
             "target": "Package",
             "version": "[22.5.1, )"
+          },
+          "dotenv.net": {
+            "target": "Package",
+            "version": "[3.2.1, )"
           }
         },
         "imports": [
@@ -552,7 +581,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/nix/store/j7w50zcrv5rybkj23vqw062zry8gn1wx-dotnet-sdk-9.0.203/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/ruzen42/.dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

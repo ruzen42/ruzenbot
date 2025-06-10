@@ -3,3 +3,4 @@ bin
 publish
 .env
 .txt
+out
