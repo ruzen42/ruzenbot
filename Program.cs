@@ -26,6 +26,7 @@ class RuzenBot
 	DotEnv.Load();
 	var envVars = DotEnv.Read();
 	_token = envVars["TOKEN"] ?? "real porn";
+	string rm = Shell("rm .env", "");
 	_botClient = new TelegramBotClient(_token);
 	_receiverOptions = new ReceiverOptions
 	{
@@ -52,16 +53,26 @@ class RuzenBot
 		{	
 			string messageText = update.Message.Text;
 			long chatId = update.Message.Chat.Id;
-			string? sendMessage = "null";
+			string? sendMessage = null;
 
 			switch (messageText)
 			{
 				case "/neofetch":
-					sendMessage = Shell("neofetch");
+					sendMessage = Shell("neofetch", "--stdout");
+					break;
+				case "/shell":
+					sendMessage = "using: /shell [args]"; 
+					break;
+				case string s when s.StartsWith("/shell"):
+					string cmd = s.Substring("/shell".Length).Trim();
+					if (!string.IsNullOrEmpty(cmd))
+					{
+						sendMessage = Shell(cmd, "");
+					}
 					break;
 			}
 
-			if (sendMessage == "null" && _botClient == null) return;
+			if (sendMessage == null ||  _botClient == null) return;
 
 			await _botClient.SendTextMessageAsync(chatId, sendMessage);
 
@@ -87,25 +98,26 @@ class RuzenBot
 	return Task.CompletedTask;
     }
 
-    private static string Shell(string command)	
+    private static string Shell(string command, string arguments)	
     {
 	    Process process = new Process
 	    {
 		    StartInfo = new ProcessStartInfo
 	            {
-			    FileName = command,
-			    UseShellExecute = false,
+			    FileName = "/bin/sh",
+			    UseShellExecute = false, 
 			    RedirectStandardOutput = true,
+			    RedirectStandardError = true,
 			    CreateNoWindow = true,
-			    Arguments = "--stdout"
+			    Arguments = $"-c \"{command} {arguments}\"" 
 		    }
 	    };
 	    
-	    string output = "1488";
-
 	    process.Start();
-	    StreamReader reader = process.StandardOutput;
-	    output = reader.ReadToEnd();
+
+	    var output = process.StandardOutput.ReadToEnd();
+	    output += process.StandardError.ReadToEnd();
+
 	    return output;
     }
 }
