@@ -50,7 +50,7 @@
             },
             "Telegram.Bot": {
               "target": "Package",
-              "version": "[22.5.1, )"
+              "version": "[19.0.0, )"
             },
             "dotenv.net": {
               "target": "Package",

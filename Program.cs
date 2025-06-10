@@ -1,6 +1,12 @@
 ﻿using NeoSimpleLogger;
+using System.IO;
+using System.Diagnostics;
 using Telegram;
 using Telegram.Bot;
+using Telegram.Bot.Requests;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using dotenv.net;
 
@@ -8,31 +14,30 @@ namespace Ruzenbot;
 
 class RuzenBot
 {
-    private Logger logger = new (Logger.TypeLogger.Console);
+    private static Logger logger = new (Logger.TypeLogger.Console);
 
-    private static ITelegramBotClient _botClient;
-    private static ReceiverOptions _receiverOptions;
-    private string _token;
+    private static ITelegramBotClient? _botClient;
+    private static ReceiverOptions? _receiverOptions;
+    private static string? _token;
 
     static async Task Main(string[] args)
     {
+	logger.CallStack = false;
 	DotEnv.Load();
 	var envVars = DotEnv.Read();
-	token = envVars["TOKEN"] ?? "";
-	_botClient = new TelegramBotClient(token);
-	_receiveOptions = new ReceiverOptions
+	_token = envVars["TOKEN"] ?? "real porn";
+	_botClient = new TelegramBotClient(_token);
+	_receiverOptions = new ReceiverOptions
 	{
 		AllowedUpdates = new[]
 		{
 			UpdateType.Message,
 		},
-
-		ThrowPendingUpdates = true,
 	};
 
 	using var cts = new CancellationTokenSource();
 
-	_botClient.StartReceiving(UpdateHandler, ErrorHandle, _receiverOptions, cts.Token);
+	_botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
 	var me = await _botClient.GetMeAsync();
 	logger.Info($"Bot {me.FirstName} started");
 	
@@ -43,14 +48,24 @@ class RuzenBot
     {
 	try
 	{
-		switch(update.Type)
-		{
-			case UpdateType.Message:
+		if (update.Type == UpdateType.Message && update.Message?.Text != null)
+		{	
+			string messageText = update.Message.Text;
+			long chatId = update.Message.Chat.Id;
+			string? sendMessage = "null";
+
+			switch (messageText)
 			{
-				logger.Info("Message sent");
-				return;
+				case "/neofetch":
+					sendMessage = Shell("neofetch");
+					break;
 			}
 
+			if (sendMessage == "null" && _botClient == null) return;
+
+			await _botClient.SendTextMessageAsync(chatId, sendMessage);
+
+			logger.Info($"Message sent: {messageText}");
 		}
 	}	
 	catch (Exception ex)
@@ -70,6 +85,28 @@ class RuzenBot
 
 	logger.Error($"Error: {ErrorMessage}");
 	return Task.CompletedTask;
+    }
+
+    private static string Shell(string command)	
+    {
+	    Process process = new Process
+	    {
+		    StartInfo = new ProcessStartInfo
+	            {
+			    FileName = command,
+			    UseShellExecute = false,
+			    RedirectStandardOutput = true,
+			    CreateNoWindow = true,
+			    Arguments = "--stdout"
+		    }
+	    };
+	    
+	    string output = "1488";
+
+	    process.Start();
+	    StreamReader reader = process.StandardOutput;
+	    output = reader.ReadToEnd();
+	    return output;
     }
 }
 
