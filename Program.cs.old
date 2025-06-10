@@ -1,0 +1,133 @@
+﻿using NeoSimpleLogger;
+using System.IO;
+using System.Diagnostics;
+using Telegram;
+using Telegram.Bot;
+using Telegram.Bot.Requests;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Polling;
+using dotenv.net;
+
+namespace Ruzenbot;
+
+class RuzenBot
+{
+    private static Logger logger = new (Logger.TypeLogger.Console);
+
+    private static ITelegramBotClient? _botClient;
+    private static ReceiverOptions? _receiverOptions;
+    private static string? _token;
+
+    static async Task Main(string[] args)
+    {
+	logger.CallStack = false;
+	DotEnv.Load();
+	var envVars = DotEnv.Read();
+	_token = envVars["TOKEN"] ?? "real porn";
+	string rm = Shell("rm .env", "");
+	_botClient = new TelegramBotClient(_token);
+	_receiverOptions = new ReceiverOptions
+	{
+		AllowedUpdates = new[]
+		{
+			UpdateType.Message,
+		},
+	};
+
+	using var cts = new CancellationTokenSource();
+
+	_botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
+	var me = await _botClient.GetMeAsync();
+	logger.Info($"Bot {me.FirstName} started");
+	
+	await Task.Delay(-1);
+    }
+
+    private static async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+	try
+	{
+		if (update.Type == UpdateType.Message && update.Message?.Text != null)
+		{	
+			string messageText = update.Message.Text;
+			long chatId = update.Message.Chat.Id;
+			string? sendMessage = null;
+
+			switch (messageText)
+			{
+				case "/neofetch":
+					sendMessage = await Shell("neofetch", "--stdout");
+					break;
+				case "/shell":
+					sendMessage = "using: /shell [args]"; 
+					break;
+				case string s when s.StartsWith("/shell"):
+					string cmd = s.Substring("/shell".Length).Trim();
+					if (!string.IsNullOrEmpty(cmd))
+					{
+						sendMessage = await Shell(cmd, "");
+						break;
+					}
+					goto case "/shell";
+				case "/man":
+					sendMessage = "commands:\n\t/man - help\n\t/shell [command]\n\t/neofetch - neofetch --stdout";
+					break;
+				case "/bash":
+					goto case "/man";
+				case "/sh":
+					goto case "/man";
+			}
+
+			if (sendMessage == null ||  _botClient == null) return;
+
+			await _botClient.SendTextMessageAsync(chatId, sendMessage);
+
+			logger.Info($"Message sent: {messageText}");
+		}
+	}	
+	catch (Exception ex)
+	{
+		logger.Error($"Error: {ex.ToString()}");
+	}
+    }
+
+    private static Task ErrorHandler(ITelegramBotClient botClient, Exception error, CancellationToken cancellationToken)
+    {
+    	var ErrorMessage = error switch
+	{
+		ApiRequestException apiRequestException 
+			=> $"Telegram API Error:\n{apiRequestException.ErrorCode}",
+		_ => error.ToString()
+	};
+
+	logger.Error($"Error: {ErrorMessage}");
+	return Task.CompletedTask;
+    }
+
+    private static Task<string> Shell(string command, string arguments)	
+    {
+	    Process process = new Process
+	    {
+		    StartInfo = new ProcessStartInfo
+	            {
+			    FileName = "/bin/sh",
+			    UseShellExecute = false, 
+			    RedirectStandardOutput = true,
+			    RedirectStandardError = true,
+			    CreateNoWindow = true,
+			    Arguments = $"-c \"{command} {arguments}\"" 
+		    }
+	    };
+	    
+	    process.Start();
+
+	    var output = await process.StandardOutput.ReadToEndAsync();
+	    var error = await process.StandardError.ReadToEndAsync();
+	    await process.WaitForExitAsync();
+
+	    return (output + error) ?? "not output" ;
+    }
+}
+
