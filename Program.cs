@@ -23,9 +23,11 @@ class RuzenBot
     {
         public const string Shell = "/shell";
         public const string Man = "/man";
+        public const string MyId = "/myid";
         public const string Bash = "/bash";
         public const string Sh = "/sh";
         public const string Neofetch = "/neofetch";
+
     }
 
     static async Task Main(string[] args)
@@ -39,6 +41,7 @@ class RuzenBot
             logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
             Environment.Exit(1);
         }
+	logger.Info(".env file deleted" + Shell("rm .env", ""));
 
         _botClient = new TelegramBotClient(_token);
         _receiverOptions = new ReceiverOptions
@@ -69,6 +72,12 @@ class RuzenBot
                 string messageText = update.Message.Text;
                 long chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
+		var user = update.Message.From;
+                logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user.Username ?? "user" }\t{user.Id}");
+		if (user.Id == 1981883548) 
+		{
+			await _botClient.SendTextMessageAsync(chatId, "sosi typoi trol @" + user.Username, cancellationToken: cancellationToken); return;
+		}
 
                 switch (messageText)
                 {
@@ -76,28 +85,34 @@ class RuzenBot
                         sendMessage = await Shell("neofetch", "--stdout");
                         break;
                     case Commands.Shell:
-                        sendMessage = "using: /shell [args]";
+                        sendMessage = $"using: {Commands.Shell} [args]";
                         break;
+                    case string s when s.StartsWith(Commands.MyId):
+			sendMessage = user.Id.ToString() ?? "1488";
+			break;
                     case string s when s.StartsWith(Commands.Shell):
                         string cmd = s.Substring(Commands.Shell.Length).Trim();
                         if (!string.IsNullOrEmpty(cmd))
                         {
                             sendMessage = await Shell(cmd, "");
+                            if (string.IsNullOrEmpty(sendMessage)) sendMessage = "no output";
+                            if (sendMessage.Length > 4095) sendMessage = "so big output";
                         }
                         else
                         {
-                            sendMessage = string.IsNullOrEmpty(cmd) ? "using: /shell [args]" : "Error: Command not allowed.";
+                            sendMessage = "Command is empty";
                         }
                         break;
                     case Commands.Man:
                     case Commands.Bash:
                     case Commands.Sh:
-                        sendMessage = "commands:\n\t/man - help\n\t/shell [command] - execute shell command\n\t/neofetch - system info";
+                        sendMessage = $"commands:\n\t/man - help\n\t{Commands.Shell} [command] - execute shell command\n\t/neofetch - system info";
                         break;
                     default:
                         logger.Warn($"Unknown command received: {messageText}");
                         break;
                 }
+
 
                 if (sendMessage == null || _botClient == null)
                 {
@@ -106,12 +121,11 @@ class RuzenBot
                 }
 
                 await _botClient.SendTextMessageAsync(chatId, sendMessage, cancellationToken: cancellationToken);
-                logger.Info($"Message sent: {messageText}");
             }
         }
         catch (Exception ex)
         {
-            logger.Error($"Error: {ex}");
+            logger.Error($"Error: {ex.ToString().Substring(10)}");
         }
     }
 
@@ -161,6 +175,9 @@ class RuzenBot
         {
             logger.Error($"Shell command execution failed: {ex.Message}");
             return $"Error: {ex.Message}";
+	    Environment.Exit(1);
         }
     }
 }
+
+
