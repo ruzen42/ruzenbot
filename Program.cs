@@ -108,9 +108,6 @@ class RuzenBot
                     case Commands.Sh:
                         sendMessage = $"commands:\n\t/man - help\n\t{Commands.Shell} [command] - execute shell command\n\t/neofetch - system info";
                         break;
-                    default:
-                        logger.Warn($"Unknown command received: {messageText}");
-                        break;
                 }
 
 
