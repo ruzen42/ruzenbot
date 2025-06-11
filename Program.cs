@@ -35,7 +35,17 @@ class RuzenBot
         logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
-        _token = envVars["TOKEN"];
+	try
+	{
+        	_token = envVars["TOKEN"];
+	}
+	catch (Exception ex)
+	{
+		_token = Environment.GetEnvironmentVariable("TOKEN");
+		logger.Info("Using TOKEN VAR");
+	}
+	logger.Warn($"TOKEN={_token[1..10]}");
+
         if (string.IsNullOrEmpty(_token))
         {
             logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
@@ -52,7 +62,6 @@ class RuzenBot
         if (_botClient == null || _receiverOptions == null)
         {
             logger.Error("Bot client or receiver options not initialized.");
-            Environment.Exit(1);
         }
 
         using var cts = new CancellationTokenSource();
@@ -74,10 +83,6 @@ class RuzenBot
                 string? sendMessage = null;
 		var user = update.Message.From;
                 logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user.Username ?? "user" }\t{user.Id}");
-		if (user.Id == 1981883548) 
-		{
-			await _botClient.SendTextMessageAsync(chatId, "sosi typoi trol @" + user.Username, cancellationToken: cancellationToken); return;
-		}
 
                 switch (messageText)
                 {
@@ -163,7 +168,6 @@ class RuzenBot
             if (process.ExitCode != 0)
             {
                 logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
-                return $"Error executing command: {error}";
             }
 
             return output + error;
@@ -172,7 +176,6 @@ class RuzenBot
         {
             logger.Error($"Shell command execution failed: {ex.Message}");
             return $"Error: {ex.Message}";
-	    Environment.Exit(1);
         }
     }
 }

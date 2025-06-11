@@ -2,3 +2,5 @@ Dockerfile
 bin
 obj
 .git 
+.env
+
