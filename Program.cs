@@ -12,17 +12,17 @@ using dotenv.net;
 
 namespace Ruzenbot;
 
-class RuzenBot
+internal class RuzenBot
 {
-    private static readonly Logger logger = new(Logger.TypeLogger.Console);
+    private static readonly Logger Logger = new(Logger.TypeLogger.Console);
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
 
     private static class Commands
     {
-        public const string Shell = "/shell";
         public const string Man = "/man";
+        public const string Shell = "/shell";
         public const string MyId = "/myid";
         public const string Bash = "/bash";
         public const string Sh = "/sh";
@@ -32,42 +32,37 @@ class RuzenBot
 
     static async Task Main(string[] args)
     {
-        logger.CallStack = false;
+        Logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
-	try
-	{
+	    try
+	    {
         	_token = envVars["TOKEN"];
-	}
-	catch (Exception ex)
-	{
-		_token = Environment.GetEnvironmentVariable("TOKEN");
-		logger.Info("Using TOKEN VAR");
-	}
-	logger.Warn($"TOKEN={_token[1..10]}");
+        }
+        catch (Exception)
+        {
+            _token = Environment.GetEnvironmentVariable("TOKEN");
+            Logger.Info("Using TOKEN VAR");
+        }
+        Logger.Warn($"TOKEN={_token?[1..10]}");
 
         if (string.IsNullOrEmpty(_token))
         {
-            logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
+            Logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
             Environment.Exit(1);
         }
-	logger.Info(".env file deleted" + Shell("rm .env", ""));
+        Logger.Info(".env file deleted" + Shell("rm .env", ""));
 
         _botClient = new TelegramBotClient(_token);
         _receiverOptions = new ReceiverOptions
         {
-            AllowedUpdates = new[] { UpdateType.Message }
+            AllowedUpdates = [UpdateType.Message]
         };
-
-        if (_botClient == null || _receiverOptions == null)
-        {
-            logger.Error("Bot client or receiver options not initialized.");
-        }
 
         using var cts = new CancellationTokenSource();
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
-        var me = await _botClient.GetMeAsync();
-        logger.Info($"Bot {me.FirstName} started");
+        var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
+        Logger.Info($"Bot {me.FirstName} started");
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
@@ -76,13 +71,13 @@ class RuzenBot
     {
         try
         {
-            if (update.Type == UpdateType.Message && update.Message?.Text != null)
+            if (update is { Type: UpdateType.Message, Message.Text: not null })
             {
                 string messageText = update.Message.Text;
                 long chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
-		var user = update.Message.From;
-                logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user.Username ?? "user" }\t{user.Id}");
+		        var user = update.Message.From;
+                Logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user?.Username ?? "user" }\t{user!.Id}");
 
                 switch (messageText)
                 {
@@ -92,11 +87,11 @@ class RuzenBot
                     case Commands.Shell:
                         sendMessage = $"using: {Commands.Shell} [args]";
                         break;
-                    case string s when s.StartsWith(Commands.MyId):
-			sendMessage = user.Id.ToString() ?? "1488";
-			break;
-                    case string s when s.StartsWith(Commands.Shell):
-                        string cmd = s.Substring(Commands.Shell.Length).Trim();
+                    case { } s when s.StartsWith(Commands.MyId):
+			            sendMessage = user.Id.ToString() ?? "1488";
+			            break;
+                    case { } s when s.StartsWith(Commands.Shell):
+                        string cmd = s[Commands.Shell.Length..].Trim();
                         if (!string.IsNullOrEmpty(cmd))
                         {
                             sendMessage = await Shell(cmd, "");
@@ -118,7 +113,7 @@ class RuzenBot
 
                 if (sendMessage == null || _botClient == null)
                 {
-                    logger.Warn("No message to send or bot client is null.");
+                    Logger.Warn("No message to send or bot client is null.");
                     return;
                 }
 
@@ -127,7 +122,7 @@ class RuzenBot
         }
         catch (Exception ex)
         {
-            logger.Error($"Error: {ex.ToString().Substring(10)}");
+            Logger.Error($"Error: {ex.ToString().Substring(10)}");
         }
     }
 
@@ -139,7 +134,7 @@ class RuzenBot
             _ => error.ToString()
         };
 
-        logger.Error($"Error: {errorMessage}");
+        Logger.Error($"Error: {errorMessage}");
         return Task.CompletedTask;
     }
 
@@ -166,15 +161,13 @@ class RuzenBot
             await process.WaitForExitAsync();
 
             if (process.ExitCode != 0)
-            {
-                logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
-            }
+                Logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
 
             return output + error;
         }
         catch (Exception ex)
         {
-            logger.Error($"Shell command execution failed: {ex.Message}");
+            Logger.Error($"Shell command execution failed: {ex.Message}");
             return $"Error: {ex.Message}";
         }
     }
