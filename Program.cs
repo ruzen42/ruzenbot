@@ -20,7 +20,7 @@ internal abstract class RuzenBot
     private static class Commands
     {
         public const string Man = "/man";
-        public const string SentCommand = "/shell";
+        public const string SentCommand = "/sent";
         public const string MyId = "/myid";
         public const string Neofetch = "/neofetch";
         public const string Docker = "/docker";
@@ -75,7 +75,7 @@ internal abstract class RuzenBot
             {
                 var messageText = update.Message.Text;
                 var chatId = update.Message.Chat.Id;
-                string? sendMessage;
+                string? sendMessage = null;
 		        var user = update.Message.From;
 
                 string cmd;
@@ -85,21 +85,20 @@ internal abstract class RuzenBot
                         sendMessage = await Shell("neofetch", "--stdout");
                         break;
                     case Commands.SentCommand:
-                        sendMessage = $"using: {Commands.SentCommand} [args]";
+                        sendMessage = $"``` using: {Commands.SentCommand} [args] ```";
                         break;
                     case { } s when s.StartsWith(Commands.MyId):
                         sendMessage = user?.Id.ToString();
 			            break;
                     case { } s when s.StartsWith(Commands.Docker):
-                        sendMessage = user?.Id.ToString();
-                        cmd = s[Commands.SentCommand.Length..].Trim();
+                        cmd = s[Commands.Docker.Length..].Trim();
 
                         switch (cmd)
                         {
                             case "stop":
                             {
                                 if (!CheckRoot()) break;
-                                Logger.Info($"Bot stopping by command {user?.Username ?? "anon"}");
+                                Logger.Info($"Bot stopping by command @{user?.Username ?? "anon"}");
                                 Environment.Exit(0);
                                 break;
                             }
@@ -107,6 +106,12 @@ internal abstract class RuzenBot
                             case "stat":
                             {
                                 sendMessage = $"Stats:\n\tMax chars per message: {_maxChars}";
+                                break;
+                            }
+
+                            default:
+                            {
+                                sendMessage = $"Not command entered {cmd}";
                                 break;
                             }
                         }
@@ -135,10 +140,10 @@ internal abstract class RuzenBot
                         break;
                     case { } s when s.StartsWith(Commands.Man):
                         sendMessage = $"Commands:" +
-                                      $"\n\t/{Commands.Man} - help" +
+                                      $"\n\t{Commands.Man} - help" +
                                       $"\n\t{Commands.SentCommand} [command] - execute shell command" +
-                                      $"\n\t/{Commands.Neofetch} - system info" +
-                                      $"\n\t/{Commands.Docker} - docker container administration [run,stat]";
+                                      $"\n\t{Commands.Neofetch} - system info" +
+                                      $"\n\t{Commands.Docker} - docker container administration [run,stat]";
                         break;
                     default:
                         return;
@@ -201,7 +206,7 @@ internal abstract class RuzenBot
             if (process.ExitCode != 0)
                 Logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
             
-            var cancellationTokenSource = new CancellationTokenSource(50);
+            var cancellationTokenSource = new CancellationTokenSource(5000);
 
             try
             {
