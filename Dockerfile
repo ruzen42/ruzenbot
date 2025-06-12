@@ -3,5 +3,5 @@ COPY . /docker
 COPY neofetch /usr/bin/neofetch
 WORKDIR /docker
 RUN dotnet publish -c Release -o out
-CMD ["./out/RuzenBot"] 
+CMD ["./out/RuzenBot", "4095"] 
 

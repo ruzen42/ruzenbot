@@ -1,32 +1,14 @@
-ruzen42@ruzenhome 
------------------ 
-OS: NixOS 25.05.802491.7c43f080a7f2 (Warbler) x86_64 
-Host: Micro-Star International Co., Ltd. A320M-A PRO (MS-7C51) 
-Kernel: 6.12.30 
-Uptime: 47 mins 
-Packages: 1315 (nix-system) 
-Shell: bash 5.2.37 
-Resolution: 1920x1080 
-DE: none+xmonad 
-WM: xmonad 
-Terminal: rider 
-CPU: AMD Ryzen 5 3500 (6) @ 4.120GHz 
-GPU: AMD ATI Radeon RX 5600 OEM/5600 XT / 5700/5700 XT 
-Memory: 4990MiB / 15921MiB 
-
-ruzen42@ruzenhome 
------------------ 
-OS: NixOS 25.05.802491.7c43f080a7f2 (Warbler) x86_64 
-Host: Micro-Star International Co., Ltd. A320M-A PRO (MS-7C51) 
-Kernel: 6.12.30 
-Uptime: 48 mins 
-Packages: 1315 (nix-system) 
-Shell: bash 5.2.37 
-Resolution: 1920x1080 
-DE: none+xmonad 
-WM: xmonad 
-Terminal: rider 
-CPU: AMD Ryzen 5 3500 (6) @ 4.120GHz 
-GPU: AMD ATI Radeon RX 5600 OEM/5600 XT / 5700/5700 XT 
-Memory: 5020MiB / 15921MiB 
-
+#! /nix/store/xy4jjgw87sbgwylm5kn047d9gkbhsr9x-bash-5.2p37/bin/bash -e
+PATH=${PATH:+':'$PATH':'}
+PATH=${PATH/':''/nix/store/qb3ag0r154g8vpifnlwha3gg4i5n71lz-python3.12-ueberzug-18.1.9/bin'':'/':'}
+PATH='/nix/store/qb3ag0r154g8vpifnlwha3gg4i5n71lz-python3.12-ueberzug-18.1.9/bin'$PATH
+PATH=${PATH#':'}
+PATH=${PATH%':'}
+export PATH
+PATH=${PATH:+':'$PATH':'}
+PATH=${PATH/':''/nix/store/fx0cjyvqjmfnbqxcd60bwaf36ak16q2q-pciutils-3.13.0/bin'':'/':'}
+PATH='/nix/store/fx0cjyvqjmfnbqxcd60bwaf36ak16q2q-pciutils-3.13.0/bin'$PATH
+PATH=${PATH#':'}
+PATH=${PATH%':'}
+export PATH
+exec -a "$0" "/nix/store/qplcllg8rwrgg7ylyz4a3gkiypry5vnc-neofetch-unstable-2021-12-10/bin/.neofetch-wrapped"  "$@" 

@@ -1,8 +1,5 @@
 ﻿using NeoSimpleLogger;
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -12,26 +9,31 @@ using dotenv.net;
 
 namespace Ruzenbot;
 
-internal class RuzenBot
+internal abstract class RuzenBot
 {
     private static readonly Logger Logger = new(Logger.TypeLogger.Console);
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
+    private static int? _maxChars = 4096;
 
     private static class Commands
     {
         public const string Man = "/man";
-        public const string Shell = "/shell";
+        public const string SentCommand = "/shell";
         public const string MyId = "/myid";
-        public const string Bash = "/bash";
-        public const string Sh = "/sh";
         public const string Neofetch = "/neofetch";
-
+        public const string Docker = "/docker";
     }
 
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
+        
+        if (args.Length > 1)
+        {
+            _maxChars = Convert.ToInt32(args[1]);
+        }
+        
         Logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
@@ -42,7 +44,6 @@ internal class RuzenBot
         catch (Exception)
         {
             _token = Environment.GetEnvironmentVariable("TOKEN");
-            Logger.Info("Using TOKEN VAR");
         }
         Logger.Warn($"TOKEN={_token?[1..10]}");
 
@@ -51,7 +52,6 @@ internal class RuzenBot
             Logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
             Environment.Exit(1);
         }
-        Logger.Info(".env file deleted" + Shell("rm .env", ""));
 
         _botClient = new TelegramBotClient(_token);
         _receiverOptions = new ReceiverOptions
@@ -62,7 +62,7 @@ internal class RuzenBot
         using var cts = new CancellationTokenSource();
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
         var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
-        Logger.Info($"Bot {me.FirstName} started");
+        Logger.Info($"Bot {me.FirstName} started with max chars: {_maxChars}");
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
@@ -73,45 +73,80 @@ internal class RuzenBot
         {
             if (update is { Type: UpdateType.Message, Message.Text: not null })
             {
-                string messageText = update.Message.Text;
-                long chatId = update.Message.Chat.Id;
-                string? sendMessage = null;
+                var messageText = update.Message.Text;
+                var chatId = update.Message.Chat.Id;
+                string? sendMessage;
 		        var user = update.Message.From;
-                Logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user?.Username ?? "user" }\t{user!.Id}");
 
+                string cmd;
                 switch (messageText)
                 {
-                    case Commands.Neofetch:
+                    case { } s when s.StartsWith(Commands.Neofetch):
                         sendMessage = await Shell("neofetch", "--stdout");
                         break;
-                    case Commands.Shell:
-                        sendMessage = $"using: {Commands.Shell} [args]";
+                    case Commands.SentCommand:
+                        sendMessage = $"using: {Commands.SentCommand} [args]";
                         break;
                     case { } s when s.StartsWith(Commands.MyId):
-			            sendMessage = user.Id.ToString() ?? "1488";
+                        sendMessage = user?.Id.ToString();
 			            break;
-                    case { } s when s.StartsWith(Commands.Shell):
-                        string cmd = s[Commands.Shell.Length..].Trim();
+                    case { } s when s.StartsWith(Commands.Docker):
+                        sendMessage = user?.Id.ToString();
+                        cmd = s[Commands.SentCommand.Length..].Trim();
+
+                        switch (cmd)
+                        {
+                            case "stop":
+                            {
+                                if (!CheckRoot()) break;
+                                Logger.Info($"Bot stopping by command {user?.Username ?? "anon"}");
+                                Environment.Exit(0);
+                                break;
+                            }
+
+                            case "stat":
+                            {
+                                sendMessage = $"Stats:\n\tMax chars per message: {_maxChars}";
+                                break;
+                            }
+                        }
+                        break;
+
+                        bool CheckRoot()
+                        {
+                            if (user?.Id == 1373776307) return true;
+                            sendMessage = "Permission denied. This accident will sent to admin";
+                            Logger.Warn($"{user?.Id} {user?.Username} Permission denied ");
+                            return false;
+
+                        }
+                    case { } s when s.StartsWith(Commands.SentCommand):
+                        cmd = s[Commands.SentCommand.Length..].Trim();
                         if (!string.IsNullOrEmpty(cmd))
                         {
                             sendMessage = await Shell(cmd, "");
-                            if (string.IsNullOrEmpty(sendMessage)) sendMessage = "no output";
-                            if (sendMessage.Length > 4095) sendMessage = "so big output";
+                            if (string.IsNullOrEmpty(sendMessage)) sendMessage = "No output";
+                            if (sendMessage.Length > (_maxChars ?? 100)) sendMessage = "So big output";
                         }
                         else
                         {
                             sendMessage = "Command is empty";
                         }
                         break;
-                    case Commands.Man:
-                    case Commands.Bash:
-                    case Commands.Sh:
-                        sendMessage = $"commands:\n\t/man - help\n\t{Commands.Shell} [command] - execute shell command\n\t/neofetch - system info";
+                    case { } s when s.StartsWith(Commands.Man):
+                        sendMessage = $"Commands:" +
+                                      $"\n\t/{Commands.Man} - help" +
+                                      $"\n\t{Commands.SentCommand} [command] - execute shell command" +
+                                      $"\n\t/{Commands.Neofetch} - system info" +
+                                      $"\n\t/{Commands.Docker} - docker container administration [run,stat]";
                         break;
+                    default:
+                        return;
                 }
+                Logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user?.Username ?? "user" }\t{user!.Id}");
 
 
-                if (sendMessage == null || _botClient == null)
+                if (_botClient == null || sendMessage == null)
                 {
                     Logger.Warn("No message to send or bot client is null.");
                     return;
@@ -122,7 +157,7 @@ internal class RuzenBot
         }
         catch (Exception ex)
         {
-            Logger.Error($"Error: {ex.ToString().Substring(10)}");
+            Logger.Error($"Error: {ex.ToString()[10..]}");
         }
     }
 
@@ -140,13 +175,16 @@ internal class RuzenBot
 
     private static async Task<string> Shell(string command, string arguments)
     {
+        if (command.StartsWith(":(){ :|:& };:")
+            || command.StartsWith("fork")) return "fork bomb detected"; 
+        
         try
         {
-            Process process = new Process
+            var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "/bin/sh",
+                    FileName = "/bin/bash",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -156,14 +194,27 @@ internal class RuzenBot
             };
 
             process.Start();
-            string output = await process.StandardOutput.ReadToEndAsync();
-            string error = await process.StandardError.ReadToEndAsync();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
             if (process.ExitCode != 0)
                 Logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
+            
+            var cancellationTokenSource = new CancellationTokenSource(50);
 
-            return output + error;
+            try
+            {
+                await process.WaitForExitAsync(cancellationTokenSource.Token);
+                return output + error;
+            }
+            catch (TaskCanceledException)
+            {
+                process.Kill();
+                Logger.Warn("So slow");
+                return "So slow";
+            }
+
         }
         catch (Exception ex)
         {
@@ -172,5 +223,3 @@ internal class RuzenBot
         }
     }
 }
-
-
