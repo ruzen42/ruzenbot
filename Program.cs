@@ -16,12 +16,15 @@ internal abstract class RuzenBot
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
     private static int? _maxChars = 4096;
+    private static readonly HashSet<long> _rootsUsers = [1373776307];
+    private static HashSet<long> _rootsGroups = [-1002422734147];
+    private static bool _stopping = false;
 
     private static class Commands
     {
         public const string Man = "/man";
         public const string SentCommand = "/sent";
-        public const string MyId = "/myid";
+        public const string IdGet = "/id";
         public const string Neofetch = "/neofetch";
         public const string Docker = "/docker";
     }
@@ -77,21 +80,23 @@ internal abstract class RuzenBot
                 var chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
 		        var user = update.Message.From;
+                _stopping = false;
+                if (!_rootsGroups.Contains(chatId)) return;
 
                 string cmd;
                 switch (messageText)
                 {
-                    case { } s when s.StartsWith(Commands.Neofetch):
+                    case not null when messageText.StartsWith(Commands.Neofetch):
                         sendMessage = await Shell("neofetch", "--stdout");
                         break;
                     case Commands.SentCommand:
-                        sendMessage = $"``` using: {Commands.SentCommand} [args] ```";
+                        sendMessage = $"using: {Commands.SentCommand} [args]";
                         break;
-                    case { } s when s.StartsWith(Commands.MyId):
-                        sendMessage = user?.Id.ToString();
+                    case not null when messageText.StartsWith(Commands.IdGet):
+                        sendMessage = update.Message.ReplyToMessage?.From?.Id.ToString();
 			            break;
-                    case { } s when s.StartsWith(Commands.Docker):
-                        cmd = s[Commands.Docker.Length..].Trim();
+                    case not null when messageText.StartsWith(Commands.Docker):
+                        cmd = messageText[Commands.Docker.Length..].Trim();
 
                         switch (cmd)
                         {
@@ -99,7 +104,8 @@ internal abstract class RuzenBot
                             {
                                 if (!CheckRoot()) break;
                                 Logger.Info($"Bot stopping by command @{user?.Username ?? "anon"}");
-                                Environment.Exit(0);
+                                _stopping = true;
+                                sendMessage = "Bot stopped";
                                 break;
                             }
 
@@ -119,14 +125,13 @@ internal abstract class RuzenBot
 
                         bool CheckRoot()
                         {
-                            if (user?.Id == 1373776307) return true;
+                            if (_rootsUsers.Contains((long)user?.Id!)) return true;
                             sendMessage = "Permission denied. This accident will sent to admin";
                             Logger.Warn($"{user?.Id} {user?.Username} Permission denied ");
                             return false;
-
                         }
-                    case { } s when s.StartsWith(Commands.SentCommand):
-                        cmd = s[Commands.SentCommand.Length..].Trim();
+                    case not null when messageText.StartsWith(Commands.SentCommand):
+                        cmd = messageText[Commands.SentCommand.Length..].Trim();
                         if (!string.IsNullOrEmpty(cmd))
                         {
                             sendMessage = await Shell(cmd, "");
@@ -138,7 +143,7 @@ internal abstract class RuzenBot
                             sendMessage = "Command is empty";
                         }
                         break;
-                    case { } s when s.StartsWith(Commands.Man):
+                    case not null when messageText.StartsWith(Commands.Man):
                         sendMessage = $"Commands:" +
                                       $"\n\t{Commands.Man} - help" +
                                       $"\n\t{Commands.SentCommand} [command] - execute shell command" +
@@ -157,7 +162,8 @@ internal abstract class RuzenBot
                     return;
                 }
 
-                await _botClient.SendTextMessageAsync(chatId, sendMessage, cancellationToken: cancellationToken);
+                await _botClient.SendTextMessageAsync(chatId, sendMessage, replyToMessageId: update.Message.MessageId, cancellationToken: cancellationToken);
+                if (_stopping) Environment.Exit(0);
             }
         }
         catch (Exception ex)
@@ -170,7 +176,7 @@ internal abstract class RuzenBot
     {
         var errorMessage = error switch
         {
-            ApiRequestException apiRequestException => $"Telegram API Error:\n{apiRequestException.ErrorCode}",
+            ApiRequestException apiRequestException => $"Telegram API Error {apiRequestException.ErrorCode}",
             _ => error.ToString()
         };
 
@@ -219,7 +225,6 @@ internal abstract class RuzenBot
                 Logger.Warn("So slow");
                 return "So slow";
             }
-
         }
         catch (Exception ex)
         {
