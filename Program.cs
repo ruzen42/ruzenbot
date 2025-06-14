@@ -15,10 +15,11 @@ internal abstract class RuzenBot
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
-    private static int? _maxChars = 4096;
+    private static int _maxChars = 4096;
     private static readonly HashSet<long> _rootsUsers = [1373776307];
     private static HashSet<long> _rootsGroups = [-1002422734147];
     private static bool _stopping = false;
+    private static long _messages = 0;
 
     private static class Commands
     {
@@ -93,7 +94,7 @@ internal abstract class RuzenBot
                         sendMessage = $"using: {Commands.SentCommand} [args]";
                         break;
                     case not null when messageText.StartsWith(Commands.IdGet):
-                        sendMessage = update.Message.ReplyToMessage?.From?.Id.ToString();
+                        sendMessage = update.Message.ReplyToMessage?.From?.Id.ToString() ?? user?.Id.ToString();
 			            break;
                     case not null when messageText.StartsWith(Commands.Docker):
                         cmd = messageText[Commands.Docker.Length..].Trim();
@@ -111,7 +112,9 @@ internal abstract class RuzenBot
 
                             case "stat":
                             {
-                                sendMessage = $"Stats:\n\tMax chars per message: {_maxChars}";
+                                sendMessage = "Stats:" +
+                                              $"\n Max chars per message: {_maxChars}" +
+                                              $"\n Messages: {_messages}";
                                 break;
                             }
 
@@ -136,7 +139,7 @@ internal abstract class RuzenBot
                         {
                             sendMessage = await Shell(cmd, "");
                             if (string.IsNullOrEmpty(sendMessage)) sendMessage = "No output";
-                            if (sendMessage.Length > (_maxChars ?? 100)) sendMessage = "So big output";
+                            if (sendMessage.Length > (_maxChars)) sendMessage = "So big output";
                         }
                         else
                         {
@@ -163,13 +166,14 @@ internal abstract class RuzenBot
                 }
 
                 await _botClient.SendTextMessageAsync(chatId, sendMessage, replyToMessageId: update.Message.MessageId, cancellationToken: cancellationToken);
-                if (_stopping) Environment.Exit(0);
+                //if (_stopping) Environment.Exit(0);
             }
         }
         catch (Exception ex)
         {
             Logger.Error($"Error: {ex.ToString()[10..]}");
         }
+        _messages++;
     }
 
     private static Task ErrorHandler(ITelegramBotClient botClient, Exception error, CancellationToken cancellationToken)
