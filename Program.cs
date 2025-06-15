@@ -18,7 +18,6 @@ internal abstract class RuzenBot
     private static int _maxChars = 4096;
     private static readonly HashSet<long> _rootsUsers = [1373776307];
     private static HashSet<long> _rootsGroups = [-1002422734147];
-    private static bool _stopping = false;
     private static long _messages = 0;
 
     private static class Commands
@@ -27,7 +26,7 @@ internal abstract class RuzenBot
         public const string SentCommand = "/sent";
         public const string IdGet = "/id";
         public const string Neofetch = "/neofetch";
-        public const string Docker = "/docker";
+        public const string Docker = "/admin";
     }
 
     private static async Task Main(string[] args)
@@ -81,7 +80,6 @@ internal abstract class RuzenBot
                 var chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
 		        var user = update.Message.From;
-                _stopping = false;
                 if (!_rootsGroups.Contains(chatId)) return;
 
                 string cmd;
@@ -105,8 +103,8 @@ internal abstract class RuzenBot
                             {
                                 if (!CheckRoot()) break;
                                 Logger.Info($"Bot stopping by command @{user?.Username ?? "anon"}");
-                                _stopping = true;
                                 sendMessage = "Bot stopped";
+                                Environment.Exit(0);
                                 break;
                             }
 
@@ -166,7 +164,6 @@ internal abstract class RuzenBot
                 }
 
                 await _botClient.SendTextMessageAsync(chatId, sendMessage, replyToMessageId: update.Message.MessageId, cancellationToken: cancellationToken);
-                //if (_stopping) Environment.Exit(0);
             }
         }
         catch (Exception ex)
