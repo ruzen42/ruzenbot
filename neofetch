@@ -4554,10 +4554,6 @@ get_full_path() {
     [[ -e "$full_dir" ]] && printf '%s\n' "$full_dir"
 }
 
-get_user_config() {
-
-}
-
 bar() {
     # Get the values.
     elapsed="$(($1 * bar_length / $2))"
@@ -4991,7 +4987,6 @@ exit 1
 
 get_args() {
     # Check the commandline flags early for '--config'.
-    [[ "$*" != *--config* && "$*" != *--no_config* ]] && get_user_config
 
     while [[ "$1" ]]; do
         case $1 in

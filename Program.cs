@@ -72,6 +72,7 @@ internal abstract class RuzenBot
 
     private static async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
+        _messages++;
         try
         {
             if (update is { Type: UpdateType.Message, Message.Text: not null })
@@ -118,7 +119,7 @@ internal abstract class RuzenBot
 
                             default:
                             {
-                                sendMessage = $"Not command entered {cmd}";
+                                sendMessage = $"Not command entered,\n enter stat or stop";
                                 break;
                             }
                         }
@@ -170,7 +171,6 @@ internal abstract class RuzenBot
         {
             Logger.Error($"Error: {ex.ToString()[10..]}");
         }
-        _messages++;
     }
 
     private static Task ErrorHandler(ITelegramBotClient botClient, Exception error, CancellationToken cancellationToken)
@@ -218,7 +218,6 @@ internal abstract class RuzenBot
             try
             {
                 await process.WaitForExitAsync(cancellationTokenSource.Token);
-                return output + error;
             }
             catch (TaskCanceledException)
             {
@@ -226,6 +225,7 @@ internal abstract class RuzenBot
                 Logger.Warn("So slow");
                 return "So slow";
             }
+            return output + error;
         }
         catch (Exception ex)
         {
