@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
+<<<<<<< HEAD
 COPY . /app
 RUN dotnet publish -c Release -o /app --self-contained
 
@@ -13,3 +14,8 @@ RUN apt-get update && \
 COPY neofetch /usr/bin/neofetch
 CMD ["RuzenBot"]
 
+=======
+RUN dotnet build -c Release 
+CMD ["dotnet run"] 
+
+>>>>>>> 60c0b24 (fix)
