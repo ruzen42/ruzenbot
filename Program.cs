@@ -13,6 +13,7 @@ internal abstract class RuzenBot
 {
     private static readonly Logger Logger = new(Logger.TypeLogger.Console);
     private static ITelegramBotClient? _botClient;
+    private const string Version = "1.0";
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
     private static int _maxChars = 4096;
@@ -65,7 +66,7 @@ internal abstract class RuzenBot
         using var cts = new CancellationTokenSource();
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
         var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
-        Logger.Info($"Bot {me.FirstName} started"); 
+        Logger.Info($"Bot {me.FirstName} {Version} started"); 
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
