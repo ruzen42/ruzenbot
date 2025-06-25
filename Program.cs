@@ -34,14 +34,14 @@ internal abstract class RuzenBot
         
         if (args.Length > 1)
         {
-            _maxChars = Convert.ToInt32(args[1]);
+           _maxChars = Convert.ToInt32(args[1]);
         }
         
         Logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
-	    try
-	    {
+	      try
+	      {
         	_token = envVars["TOKEN"];
         }
         catch (Exception)
@@ -65,7 +65,7 @@ internal abstract class RuzenBot
         using var cts = new CancellationTokenSource();
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
         var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
-        Logger.Info($"Bot {me.FirstName} started with max chars: {_maxChars}");
+        Logger.Info($"Bot {me.FirstName} started"); 
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
@@ -80,7 +80,7 @@ internal abstract class RuzenBot
                 var messageText = update.Message.Text;
                 var chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
-		        var user = update.Message.From;
+		            var user = update.Message.From;
                 if (!_rootsGroups.Contains(chatId)) return;
 
                 string cmd;
