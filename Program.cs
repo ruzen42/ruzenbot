@@ -1,6 +1,7 @@
 ﻿using NeoSimpleLogger;
 using System.Diagnostics;
 using Telegram.Bot;
+using MinecraftRcon;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -13,13 +14,12 @@ internal abstract class RuzenBot
 {
     private static readonly Logger Logger = new(Logger.TypeLogger.Console);
     private static ITelegramBotClient? _botClient;
-    private const string Version = "1.0";
     private static ReceiverOptions? _receiverOptions;
     private static string? _token;
     private static int _maxChars = 4096;
-    private static readonly HashSet<long> _rootsUsers = [1373776307];
-    private static HashSet<long> _rootsGroups = [-1002422734147];
-    private static long _messages = 0;
+    private static readonly HashSet<long> RootsUsers = [1373776307];
+    private static long _messages;
+    private static string _rconPassword = null!;
 
     private static class Commands
     {
@@ -28,6 +28,7 @@ internal abstract class RuzenBot
         public const string IdGet = "/id";
         public const string Neofetch = "/neofetch";
         public const string Docker = "/admin";
+        public const string Minecraft = "/mc";
     }
 
     private static async Task Main(string[] args)
@@ -35,21 +36,24 @@ internal abstract class RuzenBot
         
         if (args.Length > 1)
         {
-           _maxChars = Convert.ToInt32(args[1]);
+            _maxChars = Convert.ToInt32(args[1]);
         }
         
         Logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
-	      try
-	      {
+	    try
+	    {
         	_token = envVars["TOKEN"];
+            _rconPassword = envVars["RCON_PASSWORD"]!;
         }
         catch (Exception)
         {
-            _token = Environment.GetEnvironmentVariable("TOKEN");
+            _token = Environment.GetEnvironmentVariable("TOKEN")!;
+            _rconPassword = Environment.GetEnvironmentVariable("RCON_PASSWORD")!;
         }
-        Logger.Warn($"TOKEN={_token?[1..10]}");
+        Logger.Warn($"TOKEN={_token[1..10]}");
+        Logger.Warn($"RCON_PASSWORD={_rconPassword[0..5]}");
 
         if (string.IsNullOrEmpty(_token))
         {
@@ -66,7 +70,8 @@ internal abstract class RuzenBot
         using var cts = new CancellationTokenSource();
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
         var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
-        Logger.Info($"Bot {me.FirstName} {Version} started"); 
+        Logger.Info($"Bot {me.FirstName} started with max chars: {_maxChars}");
+        _botClient.SendTextMessageAsync("-1002422734147","Bot Started");
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
@@ -81,14 +86,17 @@ internal abstract class RuzenBot
                 var messageText = update.Message.Text;
                 var chatId = update.Message.Chat.Id;
                 string? sendMessage = null;
-		            var user = update.Message.From;
-                if (!_rootsGroups.Contains(chatId)) return;
+		        var user = update.Message.From;
 
-                string cmd;
+                string inputCommand;
                 switch (messageText)
                 {
                     case not null when messageText.StartsWith(Commands.Neofetch):
                         sendMessage = await Shell("neofetch", "--stdout");
+                        break;
+                    case not null when messageText.StartsWith(Commands.Minecraft):
+                        inputCommand = messageText[Commands.Minecraft.Length..].Trim();
+                        sendMessage = await MinecraftCall(inputCommand);
                         break;
                     case Commands.SentCommand:
                         sendMessage = $"using: {Commands.SentCommand} [args]";
@@ -97,9 +105,9 @@ internal abstract class RuzenBot
                         sendMessage = update.Message.ReplyToMessage?.From?.Id.ToString() ?? user?.Id.ToString();
 			            break;
                     case not null when messageText.StartsWith(Commands.Docker):
-                        cmd = messageText[Commands.Docker.Length..].Trim();
+                        inputCommand = messageText[Commands.Docker.Length..].Trim();
 
-                        switch (cmd)
+                        switch (inputCommand)
                         {
                             case "stop":
                             {
@@ -128,16 +136,16 @@ internal abstract class RuzenBot
 
                         bool CheckRoot()
                         {
-                            if (_rootsUsers.Contains((long)user?.Id!)) return true;
+                            if (RootsUsers.Contains((long)user?.Id!)) return true;
                             sendMessage = "Permission denied. This accident will sent to admin";
-                            Logger.Warn($"{user?.Id} {user?.Username} Permission denied ");
+                            Logger.Warn($"{user.Id} {user.Username} Permission denied ");
                             return false;
                         }
                     case not null when messageText.StartsWith(Commands.SentCommand):
-                        cmd = messageText[Commands.SentCommand.Length..].Trim();
-                        if (!string.IsNullOrEmpty(cmd))
+                        inputCommand = messageText[Commands.SentCommand.Length..].Trim();
+                        if (!string.IsNullOrEmpty(inputCommand))
                         {
-                            sendMessage = await Shell(cmd, "");
+                            sendMessage = await Shell(inputCommand, "");
                             if (string.IsNullOrEmpty(sendMessage)) sendMessage = "No output";
                             if (sendMessage.Length > (_maxChars)) sendMessage = "So big output";
                         }
@@ -151,7 +159,8 @@ internal abstract class RuzenBot
                                       $"\n\t{Commands.Man} - help" +
                                       $"\n\t{Commands.SentCommand} [command] - execute shell command" +
                                       $"\n\t{Commands.Neofetch} - system info" +
-                                      $"\n\t{Commands.Docker} - docker container administration [run,stat]";
+                                      $"\n\t{Commands.Docker} - docker container administration [run,stat]" + 
+                                      $"\n\t{Commands.Minecraft} - minecraft server administration [say,kick]";
                         break;
                     default:
                         return;
@@ -197,24 +206,24 @@ internal abstract class RuzenBot
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "/bin/bash",
-                    UseShellExecute = false,
+                    FileName = command,
+                    UseShellExecute = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
-                    Arguments = $"-c \"{command} {arguments}\""
+                    Arguments = arguments
                 }
             };
 
             process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var cancellationTokenSource = new CancellationTokenSource(5000);
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationTokenSource.Token);
+            var error = await process.StandardError.ReadToEndAsync(cancellationTokenSource.Token);
+            await process.WaitForExitAsync(cancellationTokenSource.Token);
 
             if (process.ExitCode != 0)
                 Logger.Error($"Shell command '{command} {arguments}' failed with exit code {process.ExitCode}: {error}");
             
-            var cancellationTokenSource = new CancellationTokenSource(5000);
 
             try
             {
@@ -231,6 +240,21 @@ internal abstract class RuzenBot
         catch (Exception ex)
         {
             Logger.Error($"Shell command execution failed: {ex.Message}");
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    private static async Task<string> MinecraftCall(string command)
+    {
+        try
+        {
+            using var rcon = new Client("tcp.cloudpub.ru:65531", 25575);
+            await rcon.AuthenticateAsync(_rconPassword);
+            return rcon.SendCommandAsync(command).ToString() ?? "no output";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Minecraft call failed: {ex}");
             return $"Error: {ex.Message}";
         }
     }
