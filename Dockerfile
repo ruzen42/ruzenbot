@@ -10,7 +10,7 @@ COPY --from=build /app/RuzenBot /bin
 RUN apt-get update && \
     apt-get install -y ca-certificates && \
     rm -rf /var/log/apt/lists 
-COPY neofetch /usr/bin/neofetch
+COPY fastfetch /usr/local/bin/fastfetch
 CMD ["RuzenBot"]
 
 

@@ -26,7 +26,7 @@ internal abstract class RuzenBot
         public const string Man = "/man";
         public const string SentCommand = "/sent";
         public const string IdGet = "/id";
-        public const string Neofetch = "/neofetch";
+        public const string Fetch = "/neofetch";
         public const string Docker = "/admin";
         public const string Minecraft = "/mc";
     }
@@ -71,7 +71,7 @@ internal abstract class RuzenBot
         _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
         var me = await _botClient.GetMeAsync(cancellationToken: cts.Token);
         Logger.Info($"Bot {me.FirstName} started with max chars: {_maxChars}");
-        _botClient.SendTextMessageAsync("-1002422734147","Bot Started");
+        await _botClient.SendTextMessageAsync("-1002422734147","Bot Started", cancellationToken: cts.Token);
 
         await Task.Delay(Timeout.Infinite, cts.Token);
     }
@@ -91,8 +91,8 @@ internal abstract class RuzenBot
                 string inputCommand;
                 switch (messageText)
                 {
-                    case not null when messageText.StartsWith(Commands.Neofetch):
-                        sendMessage = await Shell("neofetch", "--stdout");
+                    case not null when messageText.StartsWith(Commands.Fetch):
+                        sendMessage = await Shell("fastfetch", "--pipe --logo none");
                         break;
                     case not null when messageText.StartsWith(Commands.Minecraft):
                         inputCommand = messageText[Commands.Minecraft.Length..].Trim();
@@ -143,7 +143,7 @@ internal abstract class RuzenBot
                         }
                     case not null when messageText.StartsWith(Commands.SentCommand):
                         inputCommand = messageText[Commands.SentCommand.Length..].Trim();
-                        if (!string.IsNullOrEmpty(inputCommand))
+                        if (string.IsNullOrEmpty(inputCommand))
                         {
                             sendMessage = await Shell(inputCommand, "");
                             if (string.IsNullOrEmpty(sendMessage)) sendMessage = "No output";
@@ -158,7 +158,7 @@ internal abstract class RuzenBot
                         sendMessage = $"Commands:" +
                                       $"\n\t{Commands.Man} - help" +
                                       $"\n\t{Commands.SentCommand} [command] - execute shell command" +
-                                      $"\n\t{Commands.Neofetch} - system info" +
+                                      $"\n\t{Commands.Fetch} - system info" +
                                       $"\n\t{Commands.Docker} - docker container administration [run,stat]" + 
                                       $"\n\t{Commands.Minecraft} - minecraft server administration [say,kick]";
                         break;
@@ -207,7 +207,7 @@ internal abstract class RuzenBot
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = command,
-                    UseShellExecute = true,
+                    UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
