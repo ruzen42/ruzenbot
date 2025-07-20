@@ -13,21 +13,26 @@ namespace Ruzenbot;
 
 internal abstract class RuzenBot
 {
-    private static readonly Logger Logger = new(Logger.TypeLogger.Console);
+    private static readonly Logger Logger = new(Logger.TypeLogger.Console)
+    {
+        CallStack = false, 
+        WarnColor= ConsoleColor.Cyan
+    };
+    
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
-    private static string _token = null!;
+    private static string _token = "please don`t forget about .env";
     private static int _maxChars = 4096;
     private static readonly HashSet<long> RootsUsers = [1373776307];
     private static long _messages;
-    private static string _rconPassword = null!;
+    private static string _rconPassword = "password";
 
     private static class Commands
     {
         public const string Man = "/man";
         public const string SentCommand = "/sent";
         public const string IdGet = "/id";
-        public const string Fetch = "/neofetch";
+        public const string Fetch = "/fastfetch";
         public const string Docker = "/admin";
         public const string Minecraft = "/mc";
     }
@@ -40,7 +45,6 @@ internal abstract class RuzenBot
             _maxChars = Convert.ToInt32(args[1]);
         }
         
-        Logger.CallStack = false;
         DotEnv.Load();
         var envVars = DotEnv.Read();
 	    try
