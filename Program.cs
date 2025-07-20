@@ -1,4 +1,5 @@
-﻿using NeoSimpleLogger;
+﻿#nullable enable
+using NeoSimpleLogger;
 using System.Diagnostics;
 using Telegram.Bot;
 using MinecraftRcon;
@@ -15,7 +16,7 @@ internal abstract class RuzenBot
     private static readonly Logger Logger = new(Logger.TypeLogger.Console);
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
-    private static string? _token;
+    private static string _token = null!;
     private static int _maxChars = 4096;
     private static readonly HashSet<long> RootsUsers = [1373776307];
     private static long _messages;
@@ -45,7 +46,7 @@ internal abstract class RuzenBot
 	    try
 	    {
         	_token = envVars["TOKEN"];
-            _rconPassword = envVars["RCON_PASSWORD"]!;
+            _rconPassword = envVars["RCON_PASSWORD"];
         }
         catch (Exception)
         {
