@@ -1,16 +1,29 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /app
-COPY . /app
-RUN dotnet publish -c Release -o /app --self-contained
 
-FROM ubuntu:latest AS final
-WORKDIR /app
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-COPY --from=build /app/RuzenBot /bin
 RUN apt-get update && \
-    apt-get install -y ca-certificates && \
-    rm -rf /var/log/apt/lists 
+    apt-get install -y --no-install-recommends gcc zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . .
+
+RUN dotnet publish -c Release -o /app/publish \
+    --self-contained true \
+    -p:PublishAot=true \
+    -p:StripSymbols=true
+
+FROM ubuntu:24.04
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates libssl3 && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=build /app/publish .
 COPY fastfetch /usr/local/bin/fastfetch
-CMD ["RuzenBot"]
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+    DOTNET_RUNNING_IN_CONTAINER=true
+
+ENTRYPOINT ["./RuzenBot"]
 
 
