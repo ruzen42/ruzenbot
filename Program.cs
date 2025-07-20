@@ -21,11 +21,11 @@ internal abstract class RuzenBot
     
     private static ITelegramBotClient? _botClient;
     private static ReceiverOptions? _receiverOptions;
-    private static string _token = "please don`t forget about .env";
+    private static string? _token;
     private static int _maxChars = 4096;
     private static readonly HashSet<long> RootsUsers = [1373776307];
     private static long _messages;
-    private static string _rconPassword = "password";
+    private static string? _rconPassword;
 
     private static class Commands
     {
@@ -58,9 +58,9 @@ internal abstract class RuzenBot
             _rconPassword = Environment.GetEnvironmentVariable("RCON_PASSWORD")!;
         }
         Logger.Warn($"TOKEN={_token[1..10]}");
-        Logger.Warn($"RCON_PASSWORD={_rconPassword[0..5]}");
+        Logger.Warn($"RCON_PASSWORD={_rconPassword[..5]}");
 
-        if (string.IsNullOrEmpty(_token))
+        if (string.IsNullOrEmpty(_token) || string.IsNullOrEmpty(_rconPassword))
         {
             Logger.Error("Bot token not found in environment variables. Please set the TOKEN variable.");
             Environment.Exit(1);
@@ -90,7 +90,7 @@ internal abstract class RuzenBot
             {
                 var messageText = update.Message.Text;
                 var chatId = update.Message.Chat.Id;
-                string? sendMessage = null;
+                string sendMessage = "no output";
 		        var user = update.Message.From;
 
                 string inputCommand;
@@ -107,7 +107,7 @@ internal abstract class RuzenBot
                         sendMessage = $"using: {Commands.SentCommand} [args]";
                         break;
                     case not null when messageText.StartsWith(Commands.IdGet):
-                        sendMessage = update.Message.ReplyToMessage?.From?.Id.ToString() ?? user?.Id.ToString();
+                        sendMessage = (update.Message.ReplyToMessage?.From?.Id.ToString() ?? user?.Id.ToString())!;
 			            break;
                     case not null when messageText.StartsWith(Commands.Docker):
                         inputCommand = messageText[Commands.Docker.Length..].Trim();
@@ -173,7 +173,7 @@ internal abstract class RuzenBot
                 Logger.Info($"Message sent: {messageText}\nwhere: {chatId}\nfrom: {user?.Username ?? "user" }\t{user!.Id}");
 
 
-                if (_botClient == null || sendMessage == null)
+                if (_botClient == null )
                 {
                     Logger.Warn("No message to send or bot client is null.");
                     return;
@@ -254,7 +254,7 @@ internal abstract class RuzenBot
         try
         {
             using var rcon = new Client("tcp.cloudpub.ru:65531", 25575);
-            await rcon.AuthenticateAsync(_rconPassword);
+            await rcon.AuthenticateAsync(_rconPassword!);
             return rcon.SendCommandAsync(command).ToString() ?? "no output";
         }
         catch (Exception ex)
