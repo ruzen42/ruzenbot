@@ -7,6 +7,6 @@ public class WeatherGet(string apiKey) : IWeatherGet
 {
     public string ApiKey { get; } = apiKey;
 
-    async Task<string> IWeatherGet.GetWeather(string city) => 
-        new OpenWeatherApiClient(ApiKey).QueryAsync(city).Result.Base;
+    async Task<string> IWeatherGet.GetWeather(string city) =>
+        System.Text.Json.JsonSerializer.Serialize(await new OpenWeatherApiClient(ApiKey).QueryAsync(city));
 }
