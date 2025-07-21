@@ -21,7 +21,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
-                DropPendingUpdates = false 
+                DropPendingUpdates = true 
             };
 
             botClient.StartReceiving(

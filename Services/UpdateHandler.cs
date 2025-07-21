@@ -22,7 +22,7 @@ public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICall
                     await callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
                     break;
                 default:
-                    logger.LogWarning($"Unhandled update type: {update.Type}");
+                    logger.LogWarning("Unhandled update type: {UpdateType}", update.Type);
                     break;
             }
         }

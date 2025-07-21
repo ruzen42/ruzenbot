@@ -53,7 +53,9 @@ public class CommandService : ICommandService
     }
 
     private async Task HandlerWeatherCommand(Message message, CancellationToken cancellationToken) =>
-        await SendMessageWithReply(await _weatherGet.GetWeather( message.Text[8..].Trim()), message, cancellationToken);
+        await SendMessageWithReply(!(string.IsNullOrWhiteSpace(message.Text) || message.Text.Length <= _commands["/weather"].Name.Length)
+            ? await _weatherGet.GetWeather(message.Text[_commands["/weather"].Name.Length..])
+            : $"Use {_commands["/weather"].Name} [city]", message, cancellationToken);
 
     private async Task HandlerIdGet(Message message, CancellationToken cancellationToken) => 
         await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message, cancellationToken);
@@ -63,6 +65,11 @@ public class CommandService : ICommandService
             !(string.IsNullOrWhiteSpace(message.Text) || message.Text.Length <= 5) 
                 ? await GetProcessOutput(message.Text[5..].Trim(), cancellationToken) 
                 : $"Use {_commands["/sent"].Name} [args]", message, cancellationToken);
+    
+    private async Task HandleHelpCommand(Message message, CancellationToken cancellationToken) =>
+        await SendMessageWithReply( 
+            _commands.Values.Aggregate("Commands:\n\n", (current, command) 
+                => current + (command.GetMan() + "\n")), message, cancellationToken);
 
     private static async Task<string> GetProcessOutput(string cmd, CancellationToken cancellationToken)
     {
@@ -84,13 +91,6 @@ public class CommandService : ICommandService
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(true); 
         return await process.StandardOutput.ReadToEndAsync(cancellationToken) + await process.StandardError.ReadToEndAsync(cancellationToken);
     }
-
-    private async Task HandleHelpCommand(Message message, CancellationToken cancellationToken)
-    {
-        var helpText = _commands.Values.Aggregate("Commands:\n\n", (current, command) => current + (command.GetMan() + "\n"));
-        await SendMessageWithReply(helpText, message, cancellationToken);
-    }
-
 
     private async Task SendMessageWithReply(string sentMessage, Message messageToReply, CancellationToken cancellationToken) => 
         await _botClient.SendMessage(
