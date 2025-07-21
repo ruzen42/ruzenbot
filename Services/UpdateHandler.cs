@@ -1,12 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using static RuzenBot.Program;
 
 namespace RuzenBot.Services;
 
-public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler callbackQueryHandler)
+public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICallbackQueryHandler callbackQueryHandler)
     : IUpdateHandler
 {
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -22,13 +22,13 @@ public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler
                     await callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
                     break;
                 default:
-                    logger.Warn($"Unhandled update type: {update.Type}");
+                    logger.LogWarning($"Unhandled update type: {update.Type}");
                     break;
             }
         }
         catch (Exception ex)
         {
-            logger.Error($"Error handling update: {ex}");
+            logger.LogError("Error handling update: {Exception}", ex);
         }
     }
 
@@ -41,7 +41,7 @@ public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler
             _ => exception.ToString()
         };
 
-        logger.Error($"Bot error: {errorMessage}");
+        logger.LogError($"Bot error: {errorMessage}");
 
         if (!cancellationToken.IsCancellationRequested)
         {

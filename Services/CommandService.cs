@@ -1,7 +1,7 @@
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using static RuzenBot.Program;
 
 namespace RuzenBot.Services;
 
@@ -9,15 +9,15 @@ public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly Dictionary<string, Command> _commands;
-    private readonly CancellationToken _cts;
+    private readonly ILogger _logger;
 
-    public CommandService(ITelegramBotClient botClient, CancellationToken cancellationToken)
+    public CommandService(ITelegramBotClient botClient, ILogger logger)
     {
-        _cts = cancellationToken;
         _botClient = botClient;
+        _logger = logger;
         _commands = new Dictionary<string, Command>();
         RegisterDefaultCommands();
-        _ = GetProcessOutput("TOKEN=null");
+        _ = GetProcessOutput("TOKEN=null", CancellationToken.None);
     }
 
     public async Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken)
@@ -25,12 +25,12 @@ public class CommandService : ICommandService
         if (!_commands.TryGetValue(commandName, out var command)) return false; 
         try
         {
-            await command.Handler(message);
+            await command.Handler(message, cancellationToken);
         }
         catch (Exception ex)
         {
-            logger.Error($"Error executing command {commandName}: {ex}");
-            await SendMessageWithReply("Ошибка при выполнении команды", message);
+            _logger.LogError("Error executing command {CommandName}: {Exception}", commandName, ex);
+            await SendMessageWithReply("Ошибка при выполнении команды", message,  cancellationToken);
         }
         return true;
     }
@@ -38,7 +38,7 @@ public class CommandService : ICommandService
     public void RegisterCommand(Command command)
     {
         _commands[command.Name] = command;
-        logger.Info($"Command {command.Name} registered");
+        _logger.LogInformation("Command {CommandName} registered", command.Name);
     }
 
     private void RegisterDefaultCommands()
@@ -48,23 +48,22 @@ public class CommandService : ICommandService
         RegisterCommand(new Command("/id", "получить id", HandlerIdGet));
     }
 
-    private async Task HandlerIdGet(Message message) => 
-        await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message);
+    private async Task HandlerIdGet(Message message, CancellationToken cancellationToken) => 
+        await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message, cancellationToken);
 
-    private async Task HandlerShell(Message message)
+    private async Task HandlerShell(Message message, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(message.Text) || message.Text.Length <= 5)
         {
-            await SendMessageWithReply($"Use {_commands["/sent"].Name} [args]", message);
+            await SendMessageWithReply($"Use {_commands["/sent"].Name} [args]", message, cancellationToken);
             return;
         }
 
         var cmd = message.Text[5..].Trim();
-
-        await SendMessageWithReply(GetProcessOutput(cmd).ToString(), message);
+        await SendMessageWithReply(await GetProcessOutput(cmd, cancellationToken), message, cancellationToken);
     }
 
-    private async Task<string> GetProcessOutput(string cmd)
+    private async Task<string> GetProcessOutput(string cmd, CancellationToken cancellationToken)
     {
         var processStartInfo = new ProcessStartInfo
         {
@@ -81,18 +80,18 @@ public class CommandService : ICommandService
 
         process.Start();
     
-        await process.WaitForExitAsync(_cts).ConfigureAwait(true); 
-        return await process.StandardOutput.ReadToEndAsync(_cts) + await process.StandardError.ReadToEndAsync(_cts);
+        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(true); 
+        return await process.StandardOutput.ReadToEndAsync(cancellationToken) + await process.StandardError.ReadToEndAsync(cancellationToken);
     }
 
-    private async Task HandleHelpCommand(Message message)
+    private async Task HandleHelpCommand(Message message, CancellationToken cancellationToken)
     {
         var helpText = _commands.Values.Aggregate("Доступные команды:\n\n", (current, command) => current + (command.GetMan() + "\n"));
-        await SendMessageWithReply(helpText, message);
+        await SendMessageWithReply(helpText, message, cancellationToken);
     }
 
 
-    private async Task SendMessageWithReply(string sentMessage, Message messageToReply) => 
+    private async Task SendMessageWithReply(string sentMessage, Message messageToReply, CancellationToken cancellationToken) => 
         await _botClient.SendMessage(
             messageToReply.Chat.Id,
             sentMessage,
@@ -101,5 +100,5 @@ public class CommandService : ICommandService
                 MessageId = messageToReply.MessageId,  
                 AllowSendingWithoutReply = true
             },
-            cancellationToken: _cts); 
+            cancellationToken: cancellationToken);
 }

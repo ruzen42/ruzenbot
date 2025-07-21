@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
@@ -5,7 +6,7 @@ using static RuzenBot.Program;
 
 namespace RuzenBot.Services;
 
-public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandler) : IBotService
+public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandler, ILogger logger) : IBotService
 {
     private CancellationTokenSource _cancellationTokenSource;
 
@@ -20,7 +21,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
-                DropPendingUpdates = true
+                DropPendingUpdates = false 
             };
 
             botClient.StartReceiving(
@@ -31,11 +32,11 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             );
 
             var me = await botClient.GetMe(cancellationToken);
-            logger.Info($"Bot @{me.Username} started successfully");
+            logger.LogInformation("Bot @{MeUsername} started successfully", me.Username);
         }
         catch (Exception ex)
         {
-            logger.Fatal($"Error starting bot: {ex}");
+            logger.LogCritical("Error starting bot: {Exception}", ex);
             throw;
         }
     }
@@ -45,11 +46,11 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
         try
         {
             await _cancellationTokenSource?.CancelAsync()!;
-            logger.Info("Bot stopped successfully");
+            logger.LogInformation("Bot stopped successfully");
         }
         catch (Exception ex)
         {
-            logger.Error($"Error stopping bot: {ex}");
+            logger.LogError("Error stopping bot: {Exception}", ex);
         }
     }
 }
