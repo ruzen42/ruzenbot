@@ -9,8 +9,6 @@ namespace RuzenBot.Services;
 public class MessageHandler(ITelegramBotClient botClient, ICommandService commandService)
     : IMessageHandler
 {
-    private readonly ICommandService _commandService = commandService;
-
     public async Task HandleAsync(Message message, CancellationToken cancellationToken)
     {
         if (message.Text is null) return;
@@ -25,7 +23,7 @@ public class MessageHandler(ITelegramBotClient botClient, ICommandService comman
         {
             var commandText = messageText.Split(' ')[0]; 
             
-            if (await _commandService.ExecuteCommandAsync(commandText, message, cancellationToken))
+            if (await commandService.ExecuteCommandAsync(commandText, message, cancellationToken))
             {
                 return; 
             }
@@ -33,14 +31,6 @@ public class MessageHandler(ITelegramBotClient botClient, ICommandService comman
             await botClient.SendMessage(
                 chatId,
                 "Неизвестная команда. Используйте /help для просмотра доступных команд.",
-                cancellationToken: cancellationToken
-            );
-        }
-        else
-        {
-            await botClient.SendMessage(
-                chatId,
-                $"Вы написали: {messageText}",
                 cancellationToken: cancellationToken
             );
         }

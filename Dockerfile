@@ -19,7 +19,6 @@ RUN apt-get update && \
 
 WORKDIR /app
 COPY --from=build /app/publish .
-COPY fastfetch /usr/local/bin/fastfetch
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
     DOTNET_RUNNING_IN_CONTAINER=true

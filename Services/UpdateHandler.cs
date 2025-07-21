@@ -9,9 +9,6 @@ namespace RuzenBot.Services;
 public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler callbackQueryHandler)
     : IUpdateHandler
 {
-    private readonly IMessageHandler _messageHandler = messageHandler;
-    private readonly ICallbackQueryHandler _callbackQueryHandler = callbackQueryHandler;
-
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         try
@@ -19,10 +16,10 @@ public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler
             switch (update.Type)
             {
                 case UpdateType.Message:
-                    await _messageHandler.HandleAsync(update.Message!, cancellationToken);
+                    await messageHandler.HandleAsync(update.Message!, cancellationToken);
                     break;
                 case UpdateType.CallbackQuery:
-                    await _callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
+                    await callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
                     break;
                 default:
                     logger.Warn($"Unhandled update type: {update.Type}");
@@ -46,7 +43,6 @@ public class UpdateHandler(IMessageHandler messageHandler, ICallbackQueryHandler
 
         logger.Error($"Bot error: {errorMessage}");
 
-        // Задержка перед повторной попыткой
         if (!cancellationToken.IsCancellationRequested)
         {
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);

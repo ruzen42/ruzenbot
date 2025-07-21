@@ -20,6 +20,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
+                DropPendingUpdates = true
             };
 
             botClient.StartReceiving(
@@ -43,7 +44,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
     {
         try
         {
-            await _cancellationTokenSource?.CancelAsync();
+            await _cancellationTokenSource?.CancelAsync()!;
             logger.Info("Bot stopped successfully");
         }
         catch (Exception ex)

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using static RuzenBot.Program;
@@ -8,36 +9,30 @@ public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly Dictionary<string, Command> _commands;
-    private CancellationToken _cts;
+    private readonly CancellationToken _cts;
 
-    public CommandService(ITelegramBotClient botClient)
+    public CommandService(ITelegramBotClient botClient, CancellationToken cancellationToken)
     {
+        _cts = cancellationToken;
         _botClient = botClient;
         _commands = new Dictionary<string, Command>();
         RegisterDefaultCommands();
+        _ = GetProcessOutput("TOKEN=null");
     }
 
     public async Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken)
     {
-        _cts = cancellationToken;
         if (!_commands.TryGetValue(commandName, out var command)) return false; 
         try
         {
             await command.Handler(message);
-            return true;
         }
         catch (Exception ex)
         {
             logger.Error($"Error executing command {commandName}: {ex}");
-                
-            await _botClient.SendMessage(
-                message.Chat.Id,
-                "Произошла ошибка при выполнении команды.",
-                cancellationToken: cancellationToken
-            );
-                
-            return true; 
+            await SendMessageWithReply("Ошибка при выполнении команды", message);
         }
+        return true;
     }
 
     public void RegisterCommand(Command command)
@@ -49,41 +44,62 @@ public class CommandService : ICommandService
     private void RegisterDefaultCommands()
     {
         RegisterCommand(new Command("/man", "Показать справку", HandleHelpCommand));
-        RegisterCommand(new Command("/ping", "Проверить работу бота", HandlePingCommand));
         RegisterCommand(new Command("/sent", "Запустить программу", HandlerShell));
+        RegisterCommand(new Command("/id", "получить id", HandlerIdGet));
     }
+
+    private async Task HandlerIdGet(Message message) => 
+        await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message);
 
     private async Task HandlerShell(Message message)
     {
-        await _botClient.SendMessage(
-            message.Chat.Id,
-            "/sent",
-            cancellationToken: _cts
-        );
+        if (string.IsNullOrWhiteSpace(message.Text) || message.Text.Length <= 5)
+        {
+            await SendMessageWithReply($"Use {_commands["/sent"].Name} [args]", message);
+            return;
+        }
+
+        var cmd = message.Text[5..].Trim();
+
+        await SendMessageWithReply(GetProcessOutput(cmd).ToString(), message);
     }
 
-    private async Task HandleStartCommand(Message message)
+    private async Task<string> GetProcessOutput(string cmd)
     {
-        await _botClient.SendMessage(
-            message.Chat.Id,
-            "Добро пожаловать! Я ваш бот. Используйте /help для просмотра команд.",
-            cancellationToken: _cts
-        );
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = "/bin/sh",
+            Arguments = "-c \"" + cmd.Replace("\"", "\\\"") + "\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = new Process();
+        process.StartInfo = processStartInfo;
+
+        process.Start();
+    
+        await process.WaitForExitAsync(_cts).ConfigureAwait(true); 
+        return await process.StandardOutput.ReadToEndAsync(_cts) + await process.StandardError.ReadToEndAsync(_cts);
     }
 
     private async Task HandleHelpCommand(Message message)
     {
         var helpText = _commands.Values.Aggregate("Доступные команды:\n\n", (current, command) => current + (command.GetMan() + "\n"));
-
-        await _botClient.SendMessage(
-            message.Chat.Id,
-            helpText, cancellationToken: _cts);
+        await SendMessageWithReply(helpText, message);
     }
 
-    private async Task HandlePingCommand(Message message)
-    {
+
+    private async Task SendMessageWithReply(string sentMessage, Message messageToReply) => 
         await _botClient.SendMessage(
-            message.Chat.Id,
-            "Pong! 🏓 Бот работает нормально.", cancellationToken: _cts);
-    }
+            messageToReply.Chat.Id,
+            sentMessage,
+            replyParameters: new ReplyParameters
+            {
+                MessageId = messageToReply.MessageId,  
+                AllowSendingWithoutReply = true
+            },
+            cancellationToken: _cts); 
 }
