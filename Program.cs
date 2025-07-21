@@ -11,17 +11,18 @@ internal static class Program
 {
     private static async Task Main(string[] args)
     {
-        var token = Environment.GetEnvironmentVariable("TOKEN");
-        if (string.IsNullOrEmpty(token))
+        var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN");
+        var apiOpenWeather = Environment.GetEnvironmentVariable("API_OPEN_WEATHER");
+        if (string.IsNullOrEmpty(tokenTelegram))
         {
             return;
         }
 
-        var host = CreateHostBuilder(args, token).Build();
+        var host = CreateHostBuilder(args, tokenTelegram, apiOpenWeather).Build();
         await host.RunAsync();
     }
 
-    private static IHostBuilder CreateHostBuilder(string[] args, string token) =>
+    private static IHostBuilder CreateHostBuilder(string[] args, string token, string apiKey) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureServices((_, services) =>
             {
@@ -35,6 +36,8 @@ internal static class Program
                 services.AddSingleton<ILogger>(_ => new Logger(Logger.OutputType.Console));
 
                 services.AddSingleton<IBotService, BotService>();
+                
+                services.AddSingleton<IWeatherGet>(_ => new WeatherGet(apiKey));
 
                 services.AddHostedService<BotHostedService>();
             })
