@@ -21,17 +21,15 @@ public class MessageHandler(ITelegramBotClient botClient, ICommandService comman
 
         logger.Info($"Received message from {userId}: {messageText}");
 
-        // Проверяем, является ли сообщение командой
         if (messageText.StartsWith('/'))
         {
-            var commandText = messageText.Split(' ')[0]; // Берем только команду без параметров
+            var commandText = messageText.Split(' ')[0]; 
             
             if (await _commandService.ExecuteCommandAsync(commandText, message, cancellationToken))
             {
-                return; // Команда была обработана
+                return; 
             }
             
-            // Неизвестная команда
             await botClient.SendMessage(
                 chatId,
                 "Неизвестная команда. Используйте /help для просмотра доступных команд.",
@@ -40,7 +38,6 @@ public class MessageHandler(ITelegramBotClient botClient, ICommandService comman
         }
         else
         {
-            // Обработка обычных сообщений
             await botClient.SendMessage(
                 chatId,
                 $"Вы написали: {messageText}",

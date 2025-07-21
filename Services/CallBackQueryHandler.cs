@@ -18,7 +18,6 @@ public class CallbackQueryHandler(ITelegramBotClient botClient) : ICallbackQuery
             cancellationToken: cancellationToken
         );
 
-        // Здесь можно добавить обработку callback'ов
         await botClient.SendMessage(
             chatId,
             $"Вы нажали кнопку: {data}",

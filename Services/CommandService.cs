@@ -8,6 +8,7 @@ public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly Dictionary<string, Command> _commands;
+    private CancellationToken _cts;
 
     public CommandService(ITelegramBotClient botClient)
     {
@@ -18,6 +19,7 @@ public class CommandService : ICommandService
 
     public async Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken)
     {
+        _cts = cancellationToken;
         if (!_commands.TryGetValue(commandName, out var command)) return false; 
         try
         {
@@ -46,16 +48,26 @@ public class CommandService : ICommandService
 
     private void RegisterDefaultCommands()
     {
-        RegisterCommand(new Command("/start", "Запустить бота", HandleStartCommand));
-        RegisterCommand(new Command("/help", "Показать справку", HandleHelpCommand));
+        RegisterCommand(new Command("/man", "Показать справку", HandleHelpCommand));
         RegisterCommand(new Command("/ping", "Проверить работу бота", HandlePingCommand));
+        RegisterCommand(new Command("/sent", "Запустить программу", HandlerShell));
+    }
+
+    private async Task HandlerShell(Message message)
+    {
+        await _botClient.SendMessage(
+            message.Chat.Id,
+            "/sent",
+            cancellationToken: _cts
+        );
     }
 
     private async Task HandleStartCommand(Message message)
     {
         await _botClient.SendMessage(
             message.Chat.Id,
-            "Добро пожаловать! Я ваш бот. Используйте /help для просмотра команд."
+            "Добро пожаловать! Я ваш бот. Используйте /help для просмотра команд.",
+            cancellationToken: _cts
         );
     }
 
@@ -65,15 +77,13 @@ public class CommandService : ICommandService
 
         await _botClient.SendMessage(
             message.Chat.Id,
-            helpText
-        );
+            helpText, cancellationToken: _cts);
     }
 
     private async Task HandlePingCommand(Message message)
     {
         await _botClient.SendMessage(
             message.Chat.Id,
-            "Pong! 🏓 Бот работает нормально."
-        );
+            "Pong! 🏓 Бот работает нормально.", cancellationToken: _cts);
     }
 }
