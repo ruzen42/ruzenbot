@@ -3,10 +3,11 @@ using OpenWeatherAPI;
 
 namespace RuzenBot.Services;
 
-public class WeatherGet(string apiKey) : IWeatherGet
+public class WeatherGet(IWeatherApiClient weatherClient) : IWeatherGet
 {
-    public string ApiKey { get; } = apiKey;
-
-    async Task<string> IWeatherGet.GetWeather(string city) =>
-        System.Text.Json.JsonSerializer.Serialize(await new OpenWeatherApiClient(ApiKey).QueryAsync(city));
+    public async Task<string> GetWeather(string city)
+    {
+        var result = await weatherClient.GetWeatherAsync(city);
+        return result.Base;
+    }
 }

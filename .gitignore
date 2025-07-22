@@ -4,6 +4,6 @@ publish
 .env
 .txt
 out
-#neofetch
+docker-compose.yml
 .idea
 
