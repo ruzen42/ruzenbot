@@ -20,7 +20,7 @@ public class CommandService : ICommandService
         _weatherGet = weatherGet;
         _commands = new Dictionary<string, Command>();
         RegisterDefaultCommands();
-        _ = GetProcessOutput("TOKEN=null", CancellationToken.None);
+        _logger.LogInformation(GetProcessOutput("unset TOKEN && unset API_OPEN_WEATHER && unset RCON_PASSWORD", CancellationToken.None).ToString());
     }
 
     public async Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken)
@@ -32,17 +32,14 @@ public class CommandService : ICommandService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error executing command {CommandName}: {Exception}", commandName, ex);
-            await SendMessageWithReply("Ошибка при выполнении команды", message,  cancellationToken);
+            _logger.LogError("Error executing command {CommandName} (in context {message}: {Exception}", commandName, message.Text, ex);
+            await SendMessageWithReply("Error with executing high level command: ", message,  cancellationToken);
         }
         return true;
     }
 
-    public void RegisterCommand(Command command)
-    {
+    public void RegisterCommand(Command command) =>
         _commands[command.Name] = command;
-        _logger.LogInformation("Command {CommandName} registered", command.Name);
-    }
 
     private void RegisterDefaultCommands()
     {
