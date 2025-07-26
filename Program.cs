@@ -42,7 +42,7 @@ internal static class Program
 
                 services.AddHostedService<BotHostedService>();
             })
-            .ConfigureLogging((_, logging) =>
+            .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
             
