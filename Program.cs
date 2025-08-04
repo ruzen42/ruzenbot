@@ -13,10 +13,6 @@ internal static class Program
     {
         var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN");
         var apiOpenWeather = Environment.GetEnvironmentVariable("API_OPEN_WEATHER");
-        if (string.IsNullOrEmpty(tokenTelegram))
-        {
-            return;
-        }
 
         var host = CreateHostBuilder(args, tokenTelegram, apiOpenWeather).Build();
         await host.RunAsync();

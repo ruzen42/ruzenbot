@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace RuzenBot.Services;
 
@@ -33,7 +34,8 @@ public class CommandService : ICommandService
         catch (Exception ex)
         {
             _logger.LogError("Error executing command {CommandName} (in context {message}: {Exception}", commandName, message.Text, ex);
-            await SendMessageWithReply("Error with executing high level command: ", message,  cancellationToken);
+            await SendMessageWithReply("Error with executing high level command: bot closed", message,  cancellationToken);
+            Environment.Exit(1);
         }
         return true;
     }
@@ -96,7 +98,8 @@ public class CommandService : ICommandService
             replyParameters: new ReplyParameters
             {
                 MessageId = messageToReply.MessageId,  
-                AllowSendingWithoutReply = true
+                AllowSendingWithoutReply = true,
+                QuoteParseMode = ParseMode.Markdown
             },
             cancellationToken: cancellationToken);
 }
