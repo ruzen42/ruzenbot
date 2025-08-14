@@ -12,13 +12,12 @@ internal static class Program
     private static async Task Main(string[] args)
     {
         var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN");
-        var apiOpenWeather = Environment.GetEnvironmentVariable("API_OPEN_WEATHER");
 
-        var host = CreateHostBuilder(args, tokenTelegram, apiOpenWeather).Build();
+        var host = CreateHostBuilder(args, tokenTelegram).Build();
         await host.RunAsync();
     }
 
-    private static IHostBuilder CreateHostBuilder(string[] args, string token, string apiKey) =>
+    private static IHostBuilder CreateHostBuilder(string[] args, string token) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureServices((_, services) =>
             {
@@ -32,9 +31,6 @@ internal static class Program
                 services.AddSingleton<ILogger>(_ => new Logger(Logger.OutputType.Console));
 
                 services.AddSingleton<IBotService, BotService>();
-                services.AddTransient<IWeatherApiClient>(_ => new WeatherApiClient(apiKey));
-                
-                services.AddSingleton<IWeatherGet, WeatherGet>();
 
                 services.AddHostedService<BotHostedService>();
             })
