@@ -1,25 +1,48 @@
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
 
 namespace RuzenBot.Services.ShellRunnerExecute;
 
-public class ShellRunnerHttp(string host, string path, int port) : IShellRunnerHttp
+public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
 {
     private readonly HttpClient _httpClient = new();
-    public string Host { get; init; } = host + port;
-    public string Path { get; init; } = path;
+    private readonly JsonSerializerOptions _options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase, 
+        PropertyNameCaseInsensitive = true, 
+    };
 
+    private const string Url = "http://shellrunner:8080/api/command/execute";
     public async Task<CommandResponse> Execute(CommandRequest request, CancellationToken cancellationToken)
     {
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        try
+        {
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync(Host + Path, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsync(Url, content, cancellationToken);
+            response.EnsureSuccessStatusCode();
 
-        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonSerializer.Deserialize<CommandResponse>(responseJson);
+            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+            
+            return JsonSerializer.Deserialize<CommandResponse>(responseJson, _options);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError("HTTP Error: {ExMessage}", ex);
+            return new CommandResponse { Error = ex.Message, Context = request, ExitCode = ex.HResult };
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError("TaskCanceledException: {Task}", ex.Message);
+            return new CommandResponse { Error = "Request timeout", Context = request, ExitCode = 2};
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Exception: {ExMessage}", ex.Message);
+            return new CommandResponse { Error = ex.Message, Context = request, ExitCode = 1};
+        }
     }
 }

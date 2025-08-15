@@ -40,7 +40,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
         }
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync()
     {
         try
         {

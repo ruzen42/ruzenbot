@@ -13,7 +13,7 @@ public class BotHostedService(IBotService botService) : BackgroundService
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        await botService.StopAsync(cancellationToken);
+        await botService.StopAsync();
         await base.StopAsync(cancellationToken);
     }
 }

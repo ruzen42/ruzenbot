@@ -4,5 +4,6 @@ namespace RuzenBot.Services.Command;
 
 public interface ICommandService
 {
-    Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken);
+    Task<bool> ExecuteCommandAsync(string commandName, Telegram.Bot.Types.Message message,
+        CancellationToken cancellationToken);
 }

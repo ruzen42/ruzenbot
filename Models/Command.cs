@@ -1,6 +1,6 @@
 using Telegram.Bot.Types;
 
-namespace RuzenBot;
+namespace RuzenBot.Models;
 
 public class Command(string name, string description, Func<Message, CancellationToken, Task> handler)
 {
@@ -8,5 +8,5 @@ public class Command(string name, string description, Func<Message, Cancellation
     private string Description { get; } = description;
     public Func<Message, CancellationToken, Task> Handler { get; } = handler;
 
-    public string GetMan() => $"{Name} - {Description}";
+    public override string ToString() => $"{Name} - {Description}";
 }

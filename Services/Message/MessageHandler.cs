@@ -1,12 +1,11 @@
 using RuzenBot.Services.Command;
-using Telegram.Bot.Types;
 
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.Message;
 
 public class MessageHandler(ICommandService commandService)
     : IMessageHandler
 {
-    public async Task HandleAsync(Message message, CancellationToken cancellationToken)
+    public async Task HandleAsync(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
         if (message.Text is null) return;
 

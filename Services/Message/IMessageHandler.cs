@@ -1,8 +1,6 @@
-using Telegram.Bot.Types;
-
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.Message;
 
 public interface IMessageHandler
 {
-    Task HandleAsync(Message message, CancellationToken cancellationToken);
+    Task HandleAsync(Telegram.Bot.Types.Message message, CancellationToken cancellationToken);
 }

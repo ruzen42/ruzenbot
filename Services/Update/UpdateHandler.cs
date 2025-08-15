@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.CallbackQuery;
+using RuzenBot.Services.Message;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 
 namespace RuzenBot.Services.Update;
@@ -33,20 +35,21 @@ public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICall
         }
     }
 
-    public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-    {
-        var errorMessage = exception switch
-        {
-            ApiRequestException apiRequestException =>
-                $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-            _ => exception.ToString()
-        };
-
-        logger.LogError("Bot error: {ErrorMessage}", errorMessage);
-
-        if (!cancellationToken.IsCancellationRequested)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-        }
+    public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
+        CancellationToken cancellationToken)
+    {        
+             var errorMessage = exception switch
+             {
+                 ApiRequestException apiRequestException =>
+                     $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                 _ => exception.ToString()
+             };
+     
+             logger.LogError("Bot error: {ErrorMessage}", errorMessage);
+     
+             if (!cancellationToken.IsCancellationRequested)
+             {
+                 await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+             }
     }
 }
