@@ -1,13 +1,8 @@
-using System.Diagnostics;
-using System.Net;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using System.Net.Http;
 using System.Text;
-using System.Xml;
 using Newtonsoft.Json;
 using RuzenBot.Models;
 
@@ -20,20 +15,17 @@ public class CommandService : ICommandService
     private readonly ILogger _logger;
     private const string BaseUrl = "https://localhost:8080";
     
-    private readonly HttpClient _httpClient = new HttpClient
+    private readonly HttpClient _httpClient = new() 
     {
         Timeout = TimeSpan.FromSeconds(30)
     };
     
-    private JsonSerializer _jsonSerializer = new();
-
     public CommandService(ITelegramBotClient botClient, ILogger logger)
     {
         _botClient = botClient;
         _logger = logger;
         _commands = new Dictionary<string, Command>();
         RegisterDefaultCommands();
-        _logger.LogInformation(GetProcessOutput("unset TOKEN && unset API_OPEN_WEATHER && unset RCON_PASSWORD", CancellationToken.None).ToString());
     }
 
     public async Task<bool> ExecuteCommandAsync(string commandName, Message message, CancellationToken cancellationToken)
@@ -77,7 +69,7 @@ public class CommandService : ICommandService
         var response = new CommandResponse
         {
             Context = request,
-            Error = $"Use /{_commands[2].Name} <arguments>",
+            Error = $"Use /{_commands["/sent"].Name} <arguments>",
             ExitCode = 0,
         };
         
@@ -96,13 +88,13 @@ public class CommandService : ICommandService
     {
         try
         {
-            _jsonSerializer.Serialize(request);
+            var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync($"{BaseUrl}/api/command/execute", content, cancellationToken);
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonSerializer.Deserialize<CommandResponse>(new JsonReader(responseJson));
+            return JsonConvert.DeserializeObject<CommandResponse>(responseJson);
         }
         catch (HttpRequestException ex)
         {
