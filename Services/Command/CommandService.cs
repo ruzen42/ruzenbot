@@ -1,19 +1,19 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using RuzenBot.Models.ShellRunner;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using System.Text;
-using Newtonsoft.Json;
-using RuzenBot.Models;
 
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.Command;
 
 public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly Dictionary<string, Command> _commands;
+    private readonly Dictionary<string, RuzenBot.Command> _commands;
     private readonly ILogger _logger;
-    private const string BaseUrl = "https://localhost:8080";
+    private const string BaseUrl = "http://localhost:8080";
     
     private readonly HttpClient _httpClient = new() 
     {
@@ -24,7 +24,7 @@ public class CommandService : ICommandService
     {
         _botClient = botClient;
         _logger = logger;
-        _commands = new Dictionary<string, Command>();
+        _commands = new Dictionary<string, RuzenBot.Command>();
         RegisterDefaultCommands();
     }
 
@@ -34,24 +34,24 @@ public class CommandService : ICommandService
         try
         {
             await command.Handler(message, cancellationToken);
+            _logger.LogInformation("Command received: {Command}", commandName);
         }
         catch (Exception ex)
         {
             _logger.LogError("Error executing command {CommandName} (in context {message}: {Exception}", commandName, message.Text, ex);
-            await SendMessageWithReply("Error with executing high level command: bot closed", message,  cancellationToken);
-            Environment.Exit(1);
+            await SendMessageWithReply("Error", message,  cancellationToken);
         }
         return true;
     }
 
-    public void RegisterCommand(Command command) =>
+    public void RegisterCommand(RuzenBot.Command command) =>
         _commands[command.Name] = command;
 
     private void RegisterDefaultCommands()
     {
-        RegisterCommand(new Command("/man", "Get help", HandleHelpCommand));
-        RegisterCommand(new Command("/sent", "Start program", HandlerShell));
-        RegisterCommand(new Command("/id", "Get ur id", HandlerIdGet));
+        RegisterCommand(new RuzenBot.Command("/man", "Get help", HandleHelpCommand));
+        RegisterCommand(new RuzenBot.Command("/sent", "Start program", HandlerShell));
+        RegisterCommand(new RuzenBot.Command("/id", "Get ur id", HandlerIdGet));
     }
 
     private async Task HandlerIdGet(Message message, CancellationToken cancellationToken) => 
@@ -83,18 +83,19 @@ public class CommandService : ICommandService
         await SendMessageWithReply( 
             _commands.Values.Aggregate("Commands:\n\n", (current, command) 
                 => current + (command.GetMan() + "\n")), message, cancellationToken);
-
+    
     private async Task<CommandResponse> GetProcessOutput(CommandRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var json = JsonConvert.SerializeObject(request);
+            var json = JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync($"{BaseUrl}/api/command/execute", content, cancellationToken);
+            response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<CommandResponse>(responseJson);
+            return JsonSerializer.Deserialize<CommandResponse>(responseJson);
         }
         catch (HttpRequestException ex)
         {

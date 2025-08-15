@@ -1,5 +1,5 @@
 
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.Bot;
 
 public interface IBotService
 {

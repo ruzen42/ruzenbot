@@ -1,13 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using static RuzenBot.Program;
 
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.CallbackQuery;
 
 public class CallbackQueryHandler(ITelegramBotClient botClient, ILogger logger) : ICallbackQueryHandler
 {
-    public async Task HandleAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
+    public async Task HandleAsync(Telegram.Bot.Types.CallbackQuery callbackQuery, CancellationToken cancellationToken)
     {
         var chatId = callbackQuery.Message!.Chat.Id;
         var data = callbackQuery.Data;

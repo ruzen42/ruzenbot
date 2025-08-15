@@ -1,4 +1,4 @@
-namespace RuzenBot.Models;
+namespace RuzenBot.Models.ShellRunner;
 
 public class CommandRequest
 {

@@ -2,9 +2,8 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
-using static RuzenBot.Program;
 
-namespace RuzenBot.Services;
+namespace RuzenBot.Services.Bot;
 
 public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandler, ILogger logger) : IBotService
 {
