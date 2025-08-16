@@ -1,22 +1,23 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using RuzenBot.Models.ShellRunner;
+using RuzenBot.Models.GithubApi;
 
-namespace RuzenBot.Services.ShellRunnerExecute;
+namespace RuzenBot.Services.GithubApiGetData;
 
-public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
+public class GithubApiService(ILogger logger) : IGithubApiService
 {
     private readonly HttpClient _httpClient = new();
+    private const string Url = "http://githubapi:7070/api/query/getdata";
+
     private readonly JsonSerializerOptions _options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase, 
         PropertyNameCaseInsensitive = true
     };
-
-    private const string Url = "http://shellrunner:8080/api/command/execute";
-    public async Task<CommandResponse> Execute(CommandRequest request, CancellationToken cancellationToken)
-    {
+    
+    public async Task<QueryResponse> GetData(QueryRequest request, CancellationToken cancellationToken)
+    {   
         try
         {
             var json = JsonSerializer.Serialize(request);
@@ -27,22 +28,22 @@ public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             
-            return JsonSerializer.Deserialize<CommandResponse>(responseJson, _options);
+            return JsonSerializer.Deserialize<QueryResponse>(responseJson, _options);
         }
         catch (HttpRequestException ex)
         {
             logger.LogError("HTTP Error: {ExMessage}", ex);
-            return new CommandResponse { Error = ex.Message, ExitCode = ex.HResult };
+            return new QueryResponse();
         }
         catch (TaskCanceledException ex)
         {
             logger.LogError("TaskCanceledException: {Task}", ex.Message);
-            return new CommandResponse { Error = "Request timeout", ExitCode = 2};
+            return new QueryResponse();
         }
         catch (Exception ex)
         {
             logger.LogError("Exception: {ExMessage}", ex.Message);
-            return new CommandResponse { Error = ex.Message, ExitCode = 1};
+            return new QueryResponse();
         }
     }
 }

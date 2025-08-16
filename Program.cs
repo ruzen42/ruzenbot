@@ -18,7 +18,7 @@ internal static class Program
 {
     private static async Task Main()
     {
-        var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN");
+        var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN") ?? "test";
         var host = CreateHostBuilder(tokenTelegram).Build();
         await host.RunAsync();
     }
@@ -34,7 +34,7 @@ internal static class Program
                 services.AddSingleton<IMessageHandler, MessageHandler>();
                 services.AddSingleton<ICallbackQueryHandler, CallbackQueryHandler>();
                 services.AddSingleton<IUpdateHandler, UpdateHandler>();
-                services.AddSingleton<ILogger>(_ => new Logger(Logger.OutputType.Console));
+                services.AddSingleton<ILogger, Logger>();
                 services.AddSingleton<IShellRunnerHttp, ShellRunnerHttp>(); 
 
                 services.AddSingleton<IBotService, BotService>();

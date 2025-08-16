@@ -62,14 +62,11 @@ public class CommandService : ICommandService
         var request = new CommandRequest
         {
             Command = message.Text![5..].Trim(),
-            ChatId = message.Chat.Id,
-            UserId = message.From!.Id  
         };
         
         var response = new CommandResponse
         {
             Output = "No Output",
-            Context = request,
             ExitCode = 0
         };
         
