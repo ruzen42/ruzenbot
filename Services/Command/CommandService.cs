@@ -51,11 +51,39 @@ public class CommandService : ICommandService
         RegisterCommand(new Models.Command("!ping", "Ping pong", HandlerPingCommand));
         RegisterCommand(new Models.Command("/sent", "Start program", HandlerShell));
         RegisterCommand(new Models.Command("/id", "Get ur id", HandlerIdGet));
+        RegisterCommand(new Models.Command("/report", "Report message to admin", HandlerReport));
     }
     private async Task HandlerPingCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) =>
         await SendMessageWithReply("Pong", message, cancellationToken);
+    
     private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) => 
         await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message, cancellationToken);
+
+    private async Task HandlerReport(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        if (message.ReplyToMessage == null)
+        {
+            await SendMessageWithReply("Reply to report", message, cancellationToken);
+        }
+        else
+        {
+            if (message.ReplyToMessage.From!.Id == message.From!.Id)
+            {
+                await SendMessageWithReply("You can't write a report or throw it in", message, cancellationToken);
+                return;
+            }
+            
+            var output = 
+                         "Report summary\n@" + 
+                         message.From!.Username + 
+                         "\n" + message.Text![7..] + 
+                         "\n" + message.ReplyToMessage!.Text + 
+                         "\n@" + message.ReplyToMessage!.From!.Username;
+            var adminChatId = new ChatId(1373776307);
+            await _botClient.SendMessage(adminChatId, output, cancellationToken: cancellationToken);
+            await SendMessageWithReply("Report successfully sent", message, cancellationToken);
+        }
+    }
 
     private async Task HandlerShell(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
