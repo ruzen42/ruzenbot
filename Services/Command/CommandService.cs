@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
+using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.ShellRunnerExecute;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -13,12 +14,14 @@ public class CommandService : ICommandService
     private readonly Dictionary<string, Models.Command> _commands;
     private readonly ILogger _logger;
     private readonly IShellRunnerHttp _shellRunnerHttp;
+    private readonly IGithubApiService _githubApiService;
     
-    public CommandService(ITelegramBotClient botClient, IShellRunnerHttp runner, ILogger logger)
+    public CommandService(ITelegramBotClient botClient, IShellRunnerHttp runner, ILogger logger, IGithubApiService githubApiService)
     {
         _botClient = botClient;
         _logger = logger;
         _shellRunnerHttp = runner;
+        _githubApiService = githubApiService;
         _commands = new Dictionary<string, Models.Command>();
         RegisterDefaultCommands();
     }
@@ -48,16 +51,48 @@ public class CommandService : ICommandService
     private void RegisterDefaultCommands()
     {
         RegisterCommand(new Models.Command("/man", "Get help", HandleHelpCommand));
-        RegisterCommand(new Models.Command("!ping", "Ping pong", HandlerPingCommand));
+        RegisterCommand(new Models.Command("/ping", "Ping pong", HandlerPingCommand));
         RegisterCommand(new Models.Command("/sent", "Start program", HandlerShell));
         RegisterCommand(new Models.Command("/id", "Get ur id", HandlerIdGet));
         RegisterCommand(new Models.Command("/report", "Report message to admin", HandlerReport));
+        RegisterCommand(new Models.Command("/gitrepo", "Get github repo (/gitrepo https://github.com/user/repo)", HandlerGithubRepoCommand));
+        RegisterCommand(new Models.Command("/gituser", "Get github user (/gituser https://github.com/user)", HandlerGithubUserCommand));
     }
     private async Task HandlerPingCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) =>
         await SendMessageWithReply("Pong", message, cancellationToken);
+
+    private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var url = message.Text[8..];
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            await SendMessageWithReply("Write a url", message, cancellationToken);
+            return;
+        }
+        var result = await _githubApiService.GetUserData(url, cancellationToken);
+        
+        await SendMessageWithReply(result, message, cancellationToken);
+    }
     
-    private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) => 
-        await SendMessageWithReply((message.ReplyToMessage ?? message).From!.Id.ToString(), message, cancellationToken);
+    private async Task HandlerGithubRepoCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var url = message.Text[8..];
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            await SendMessageWithReply("Write a url", message, cancellationToken);
+            return;
+        }
+        var result = await _githubApiService.GetRepoData(url, cancellationToken);
+        
+        await SendMessageWithReply(result, message, cancellationToken);
+    }
+
+    private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var result = (message.ReplyToMessage ?? message).From!.Id.ToString(); 
+        
+        await SendMessageWithReply(result, message, cancellationToken);
+    }
 
     private async Task HandlerReport(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {

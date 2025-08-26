@@ -6,6 +6,7 @@ using RuzenBot.Services;
 using RuzenBot.Services.Bot;
 using RuzenBot.Services.CallbackQuery;
 using RuzenBot.Services.Command;
+using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.Message;
 using RuzenBot.Services.ShellRunnerExecute;
 using RuzenBot.Services.Update;
@@ -36,6 +37,7 @@ internal static class Program
                 services.AddSingleton<IUpdateHandler, UpdateHandler>();
                 services.AddSingleton<ILogger, Logger>();
                 services.AddSingleton<IShellRunnerHttp, ShellRunnerHttp>(); 
+                services.AddSingleton<IGithubApiService, GithubApiService>(); 
 
                 services.AddSingleton<IBotService, BotService>();
 
