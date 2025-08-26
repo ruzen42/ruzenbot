@@ -9,7 +9,7 @@ namespace RuzenBot.Services.GithubApi;
 public class GithubApiService(ILogger logger) : IGithubApiService
 {
     private readonly HttpClient _httpClient = new();
-    private const string Url = "http://github-api:8090/api/query/";
+    private const string Url = "http://github-api:8080/api/query/";
     // better is use ENV vars for it
 
     private readonly JsonSerializerOptions _options = new()
