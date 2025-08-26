@@ -14,7 +14,8 @@ public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
         PropertyNameCaseInsensitive = true
     };
 
-    private const string Url = "http://shellrunner:8080/api/command/execute";
+    private const string Url = "http://shellrunner:8070/api/command/execute";
+
     public async Task<CommandResponse> Execute(CommandRequest request, CancellationToken cancellationToken)
     {
         try
