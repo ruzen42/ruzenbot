@@ -12,6 +12,7 @@ using RuzenBot.Services.ShellRunnerExecute;
 using RuzenBot.Services.Update;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
+using dotenv.net;
 
 namespace RuzenBot;
 
@@ -19,6 +20,8 @@ internal static class Program
 {
     private static async Task Main()
     {
+        DotEnv.Load();
+        
         var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN") ?? "test";
         var host = CreateHostBuilder(tokenTelegram).Build();
         await host.RunAsync();

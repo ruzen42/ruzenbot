@@ -114,7 +114,7 @@ public class CommandService : ICommandService
                          "\n" + message.Text![7..] + 
                          "\n" + message.ReplyToMessage!.Text + 
                          "\n@" + message.ReplyToMessage!.From!.Username;
-            var adminChatId = new ChatId(1373776307);
+            var adminChatId = new ChatId(Environment.GetEnvironmentVariable("ADMIN_CHAT_ID") ?? "1373776307");
             await _botClient.SendMessage(adminChatId, output, cancellationToken: cancellationToken);
             await SendMessageWithReply("Report successfully sent", message, cancellationToken);
         }
