@@ -1,6 +1,3 @@
 namespace RuzenBot.Models.ShellRunner;
 
-public class CommandRequest
-{
-    public string Command { get; set; }
-}
+public record struct CommandRequest(string Command);

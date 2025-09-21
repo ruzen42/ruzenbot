@@ -1,7 +1,10 @@
+using RuzenBot.Models.GithubApi.RepoInfo;
+using RuzenBot.Models.GithubApi.UserInfo;
+
 namespace RuzenBot.Services.GithubApi;
 
 public interface IGithubApiService
 {
-    Task<string> GetRepoData(string url, CancellationToken cancellationToken);
-    Task<string> GetUserData(string url, CancellationToken cancellationToken);
+    Task<QueryRepoInfoResponse> GetRepoData(string url, CancellationToken cancellationToken);
+    Task<QueryUserInfoResponse> GetUserData(string url, CancellationToken cancellationToken);
 }

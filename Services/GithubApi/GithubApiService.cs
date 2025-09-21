@@ -18,7 +18,7 @@ public class GithubApiService(ILogger logger) : IGithubApiService
         PropertyNameCaseInsensitive = true
     };
     
-    public async Task<string> GetRepoData(string url, CancellationToken cancellationToken)
+    public async Task<QueryRepoInfoResponse> GetRepoData(string url, CancellationToken cancellationToken)
     {
         try
         {
@@ -29,27 +29,25 @@ public class GithubApiService(ILogger logger) : IGithubApiService
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            
-            return JsonSerializer.Deserialize<QueryRepoInfoResponse>(responseJson, _options).ToString();
+
+            return JsonSerializer.Deserialize<QueryRepoInfoResponse>(responseJson, _options);
         }
         catch (HttpRequestException ex)
         {
             logger.LogError("HTTP Error: {ExMessage}", ex);
-            return "HTTP Error";
         }
         catch (TaskCanceledException ex)
         {
             logger.LogError("TaskCanceledException: {Task}", ex.Message);
-            return "TaskCanceledException Error";
         }
         catch (Exception ex)
         {
             logger.LogError("Exception: {ExMessage}", ex.Message);
-            return "Error";
         }
+        return default;
     }
 
-    public async Task<string> GetUserData(string url, CancellationToken cancellationToken)
+    public async Task<QueryUserInfoResponse> GetUserData(string url, CancellationToken cancellationToken)
     {
         try
         {
@@ -60,23 +58,21 @@ public class GithubApiService(ILogger logger) : IGithubApiService
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            
-            return JsonSerializer.Deserialize<QueryUserInfoResponse>(responseJson, _options).ToString();
+
+            return JsonSerializer.Deserialize<QueryUserInfoResponse>(responseJson, _options);
         }
         catch (HttpRequestException ex)
         {
             logger.LogError("HTTP Error: {ExMessage}", ex);
-            return "HTTP Error";
         }
         catch (TaskCanceledException ex)
         {
             logger.LogError("TaskCanceledException: {Task}", ex.Message);
-            return "TaskCanceledException Error";
         }
         catch (Exception ex)
         {
             logger.LogError("Exception: {ExMessage}", ex.Message);
-            return "Error";
         }
+        return default;
     }
 }

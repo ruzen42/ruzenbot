@@ -5,7 +5,7 @@ using RuzenBot.Models.ShellRunner;
 
 namespace RuzenBot.Services.ShellRunnerExecute;
 
-public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
+public class ShellRunnerService(ILogger logger) : IShellRunnerService
 {
     private readonly HttpClient _httpClient = new();
     private readonly JsonSerializerOptions _options = new()
@@ -16,11 +16,11 @@ public class ShellRunnerHttp(ILogger logger) : IShellRunnerHttp
 
     private const string Url = "http://shellrunner:8081/api/command/execute";
 
-    public async Task<CommandResponse> Execute(CommandRequest request, CancellationToken cancellationToken)
+    public async Task<CommandResponse> Execute(string request, CancellationToken cancellationToken)
     {
         try
         {
-            var json = JsonSerializer.Serialize(request);
+            var json = JsonSerializer.Serialize(new CommandRequest(request));
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(Url, content, cancellationToken);

@@ -13,14 +13,14 @@ public class CommandService : ICommandService
     private readonly ITelegramBotClient _botClient;
     private readonly Dictionary<string, Models.Command> _commands;
     private readonly ILogger _logger;
-    private readonly IShellRunnerHttp _shellRunnerHttp;
+    private readonly IShellRunnerService _shellRunnerService;
     private readonly IGithubApiService _githubApiService;
     
-    public CommandService(ITelegramBotClient botClient, IShellRunnerHttp runner, ILogger logger, IGithubApiService githubApiService)
+    public CommandService(ITelegramBotClient botClient, IShellRunnerService runner, ILogger logger, IGithubApiService githubApiService)
     {
         _botClient = botClient;
         _logger = logger;
-        _shellRunnerHttp = runner;
+        _shellRunnerService = runner;
         _githubApiService = githubApiService;
         _commands = new Dictionary<string, Models.Command>();
         RegisterDefaultCommands();
@@ -63,7 +63,7 @@ public class CommandService : ICommandService
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var url = message.Text[8..];
+        var url = message.Text![8..];
         if (string.IsNullOrWhiteSpace(url))
         {
             await SendMessageWithReply("Write a url", message, cancellationToken);
@@ -71,12 +71,12 @@ public class CommandService : ICommandService
         }
         var result = await _githubApiService.GetUserData(url, cancellationToken);
         
-        await SendMessageWithReply(result, message, cancellationToken);
+        await SendMessageWithReply(result.ToString(), message, cancellationToken);
     }
     
     private async Task HandlerGithubRepoCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var url = message.Text[8..];
+        var url = message.Text![8..];
         if (string.IsNullOrWhiteSpace(url))
         {
             await SendMessageWithReply("Write a url", message, cancellationToken);
@@ -84,7 +84,7 @@ public class CommandService : ICommandService
         }
         var result = await _githubApiService.GetRepoData(url, cancellationToken);
         
-        await SendMessageWithReply(result, message, cancellationToken);
+        await SendMessageWithReply(result.ToString(), message, cancellationToken);
     }
 
     private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
@@ -122,19 +122,14 @@ public class CommandService : ICommandService
 
     private async Task HandlerShell(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var request = new CommandRequest
-        {
-            Command = message.Text![5..].Trim(),
-        };
-        
         var response = new CommandResponse
         {
             Output = "No Output",
             ExitCode = 0
         };
         
-        if (!(message.Text.Length <= _commands["/sent"].Name.Length))
-            response = await _shellRunnerHttp.Execute(request, cancellationToken); 
+        if (!(message.Text!.Length <= _commands["/sent"].Name.Length))
+            response = await _shellRunnerService.Execute(message.Text![5..].Trim(), cancellationToken); 
         
         await SendMessageWithReply(response.ToString(), message, cancellationToken);
     }

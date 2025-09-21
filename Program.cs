@@ -42,7 +42,7 @@ internal static class Program
                 services.AddSingleton<ICallbackQueryHandler, CallbackQueryHandler>();
                 services.AddSingleton<IUpdateHandler, UpdateHandler>();
                 services.AddSingleton<ILogger, Logger>();
-                services.AddSingleton<IShellRunnerHttp, ShellRunnerHttp>(); 
+                services.AddSingleton<IShellRunnerService, ShellRunnerService>(); 
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
                 services.AddHostedService<BotHostedService>();
                 services.AddSingleton<IConsoleService, ConsoleService>();
