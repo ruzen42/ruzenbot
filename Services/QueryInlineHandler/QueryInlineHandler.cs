@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.ShellRunnerExecute;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 
-public class InlineQueryHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ILogger logger)
+namespace RuzenBot.Services.QueryInlineHandler;
+
+public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ILogger logger) : IQueryInlineHandler 
 {
-    private readonly CancellationTokenSource _cts = new();
     
-    public async Task HandleInlineQuery(Update update)
+    public async Task HandleInlineQuery(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
     {
         var inlineQuery = update.InlineQuery!;
         
@@ -19,9 +19,8 @@ public class InlineQueryHandler(ITelegramBotClient botClient, IShellRunnerServic
                 new InlineQueryResultArticle(
                     id: "1",
                     title: "Output",
-                    inputMessageContent: new InputTextMessageContent((await shellRunnerService.Execute(inlineQuery.Query, _cts.Token)).ToString()!))
+                    inputMessageContent: new InputTextMessageContent((await shellRunnerService.Execute(inlineQuery.Query, cancellationToken)).ToString()!))
             };
-
 
             await botClient.AnswerInlineQuery(inlineQuery.Id, results);
         }

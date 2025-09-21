@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.CallbackQuery;
 using RuzenBot.Services.Message;
+using RuzenBot.Services.QueryInlineHandler;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -8,7 +9,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RuzenBot.Services.Update;
 
-public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICallbackQueryHandler callbackQueryHandler)
+public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICallbackQueryHandler callbackQueryHandler, IQueryInlineHandler inlineHandler)
     : IUpdateHandler
 {
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
@@ -21,7 +22,7 @@ public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICall
                     await callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
                     break;
                 case UpdateType.InlineQuery:
-                    
+                    await inlineHandler.HandleInlineQuery(update, cancellationToken);
                     break;
                 case UpdateType.ChatJoinRequest:
                     await botClient.SendMessage(update.ChatJoinRequest!.Chat, "Привет сосунок", cancellationToken: cancellationToken);

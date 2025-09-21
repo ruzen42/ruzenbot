@@ -9,6 +9,7 @@ using RuzenBot.Services.Command;
 using RuzenBot.Services.ConsoleCommand;
 using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.Message;
+using RuzenBot.Services.QueryInlineHandler;
 using RuzenBot.Services.ShellRunnerExecute;
 using RuzenBot.Services.Update;
 using Telegram.Bot;
@@ -46,6 +47,7 @@ internal static class Program
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
                 services.AddHostedService<BotHostedService>();
                 services.AddSingleton<IConsoleService, ConsoleService>();
+                services.AddSingleton<IQueryInlineHandler, QueryInlineHandler>();
 
                 services.AddSingleton<IBotService, BotService>();
 
