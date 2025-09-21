@@ -7,13 +7,15 @@ public readonly record struct QueryUserInfoResponse(
     string DataCreated,
     int ReposCount = 0,
     int Followers = 0,
-    List<string> Tags = null!
-);
-  /*  public override string ToString() => $"Username: {Username}\n" +
+    List<string> Tags = null!) 
+{
+    
+    public override string ToString() => $"Username: {Username}\n" +
                $"Bio: {Bio}\n" +
                $"Email: {Email}\n" +
                $"Date Created: {DataCreated}\n" +
                $"Repositories: {ReposCount}\n" +
                $"Followers: {Followers}\n" +
                $"Tags: {string.Join(", ", Tags)}";
-        */
+    
+}

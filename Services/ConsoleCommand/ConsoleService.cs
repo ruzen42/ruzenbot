@@ -17,6 +17,7 @@ public class ConsoleService(
     private readonly CancellationTokenSource _cts = new();
     private readonly string _username = Environment.UserName;
     private readonly List<ConsoleCommand> _commands = [];
+    private const long YourId = 1373776307;
     
     private record struct ConsoleCommand(string Name, string Description, Func<Task> Function);
 
@@ -89,7 +90,7 @@ public class ConsoleService(
         var message = new Telegram.Bot.Types.Message
         {
             Text = "Pong!",
-            Chat = new Chat { Id = 5727604888 }
+            Chat = new Chat { Id = YourId}
         };
         await botService.SendMessage(message);
     }
