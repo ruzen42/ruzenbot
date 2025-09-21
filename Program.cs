@@ -46,12 +46,12 @@ internal static class Program
                 services.AddSingleton<IShellRunnerService, ShellRunnerService>(); 
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
                 services.AddHostedService<BotHostedService>();
-                services.AddSingleton<IConsoleService, ConsoleService>();
+                //services.AddSingleton<IConsoleService, ConsoleService>();
                 services.AddSingleton<IQueryInlineHandler, QueryInlineHandler>();
 
                 services.AddSingleton<IBotService, BotService>();
 
-                services.AddHostedService<ConsoleHostedService>();
+                //services.AddHostedService<ConsoleHostedService>();
             })
             .ConfigureLogging(logging =>
             {

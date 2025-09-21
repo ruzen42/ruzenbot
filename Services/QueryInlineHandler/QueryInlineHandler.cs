@@ -12,21 +12,28 @@ public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerServic
     {
         var inlineQuery = update.InlineQuery!;
         
+        if (inlineQuery == null)
+        {
+            logger.LogError("Inline query is null");
+            return;
+        }
+        
         try
         {
+            var content = await shellRunnerService.Execute(inlineQuery.Query, cancellationToken);
             var results = new List<InlineQueryResult>
             {
                 new InlineQueryResultArticle(
                     id: "1",
-                    title: "Output",
-                    inputMessageContent: new InputTextMessageContent((await shellRunnerService.Execute(inlineQuery.Query, cancellationToken)).ToString()!))
+                    title: "Output: \n" + (string.IsNullOrWhiteSpace(content.Output) ? content.Output : content.Error), 
+                    inputMessageContent: new InputTextMessageContent(content.ToString()!))
             };
 
-            await botClient.AnswerInlineQuery(inlineQuery.Id, results);
+            await botClient.AnswerInlineQuery(inlineQuery.Id, results, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
-            logger.LogError($"Ошибка при обработке inline query: {ex.Message}");
+            logger.LogError("Error while execute inline query: {ex}", ex.Message);
         }
     }
 }
