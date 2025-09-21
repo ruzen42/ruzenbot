@@ -17,13 +17,18 @@ public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICall
         {
             switch (update.Type)
             {
-                case UpdateType.Message:
-                    await messageHandler.HandleAsync(update.Message!, cancellationToken);
-                    break;
                 case UpdateType.CallbackQuery:
                     await callbackQueryHandler.HandleAsync(update.CallbackQuery!, cancellationToken);
                     break;
-
+                case UpdateType.InlineQuery:
+                    
+                    break;
+                case UpdateType.ChatJoinRequest:
+                    await botClient.SendMessage(update.ChatJoinRequest!.Chat, "Привет сосунок", cancellationToken: cancellationToken);
+                    break;
+                case UpdateType.Message:
+                    await messageHandler.HandleAsync(update.Message!, cancellationToken);
+                    break;
                 default:
                     logger.LogWarning("Unhandled update type: {UpdateType}", update.Type);
                     break;
