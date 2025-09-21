@@ -2,5 +2,6 @@ namespace RuzenBot.Services.ConsoleCommand;
 
 public interface IConsoleService
 {
-   public Task<string> ReadAsync(CancellationToken cancellationToken); 
+   Task StartAsync(CancellationToken cancellationToken = default);
+   Task StopAsync(CancellationToken cancellationToken = default);
 }

@@ -6,6 +6,7 @@ using RuzenBot.Services;
 using RuzenBot.Services.Bot;
 using RuzenBot.Services.CallbackQuery;
 using RuzenBot.Services.Command;
+using RuzenBot.Services.ConsoleCommand;
 using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.Message;
 using RuzenBot.Services.ShellRunnerExecute;
@@ -19,7 +20,12 @@ internal static class Program
 {
     private static async Task Main()
     {
-        var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN") ?? "test";
+        var tokenTelegram = Environment.GetEnvironmentVariable("TOKEN");
+        if (string.IsNullOrWhiteSpace(tokenTelegram))
+        {
+            Console.WriteLine("Error: token is null or empty");
+            return;
+        }
         var host = CreateHostBuilder(tokenTelegram).Build();
         await host.RunAsync();
     }
@@ -38,10 +44,12 @@ internal static class Program
                 services.AddSingleton<ILogger, Logger>();
                 services.AddSingleton<IShellRunnerHttp, ShellRunnerHttp>(); 
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
+                services.AddSingleton<IConsoleService, ConsoleService>();
 
                 services.AddSingleton<IBotService, BotService>();
 
                 services.AddHostedService<BotHostedService>();
+                services.AddHostedService<ConsoleHostedService>();
             })
             .ConfigureLogging(logging =>
             {
