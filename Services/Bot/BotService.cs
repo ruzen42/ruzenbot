@@ -10,17 +10,17 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
 {
     private CancellationTokenSource _cancellationTokenSource;
     private const long YourId = 1373776307;
-    private static readonly Chat _yourChat = new() { Id = YourId };
+    private static readonly Chat YourChat = new() { Id = YourId };
 
-    private static Telegram.Bot.Types.Message startMessage = new()
+    private static readonly Telegram.Bot.Types.Message StartMessage = new()
     {
-        Chat = _yourChat,
+        Chat = YourChat,
         Text = "Ruzenbot started"
     };
     
-    private static Telegram.Bot.Types.Message exitMessage = new()
+    private static readonly Telegram.Bot.Types.Message ExitMessage = new()
     {
-        Chat = _yourChat,
+        Chat = YourChat,
         Text = "Ruzenbot stoped"
     };
 
@@ -34,7 +34,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             
             var receiverOptions = new ReceiverOptions
             {
-                AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
+                AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery, UpdateType.ChatJoinRequest, UpdateType.InlineQuery],
                 DropPendingUpdates = true 
             };
 
@@ -46,7 +46,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             );
 
             var me = await botClient.GetMe(cancellationToken);
-            await SendMessage(startMessage);
+            await SendMessage(StartMessage);
             logger.LogInformation("Bot @{MeUsername} started successfully", me.Username);
         }
         catch (Exception ex)
@@ -61,7 +61,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
         try
         {
             await _cancellationTokenSource?.CancelAsync()!;
-            await SendMessage(exitMessage);
+            await SendMessage(ExitMessage);
             logger.LogInformation("Bot stopped successfully");
         }
         catch (Exception ex)
