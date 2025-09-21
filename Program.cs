@@ -32,7 +32,7 @@ internal static class Program
 
     private static IHostBuilder CreateHostBuilder(string token) =>
         Host.CreateDefaultBuilder()
-            .ConfigureServices((services) =>
+            .ConfigureServices(services =>
             {
                 services.AddSingleton<ITelegramBotClient>(_ =>
                     new TelegramBotClient(token));
@@ -44,11 +44,11 @@ internal static class Program
                 services.AddSingleton<ILogger, Logger>();
                 services.AddSingleton<IShellRunnerHttp, ShellRunnerHttp>(); 
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
+                services.AddHostedService<BotHostedService>();
                 services.AddSingleton<IConsoleService, ConsoleService>();
 
                 services.AddSingleton<IBotService, BotService>();
 
-                services.AddHostedService<BotHostedService>();
                 services.AddHostedService<ConsoleHostedService>();
             })
             .ConfigureLogging(logging =>

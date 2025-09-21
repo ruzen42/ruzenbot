@@ -52,4 +52,9 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
             logger.LogError("Error stopping bot: {Exception}", ex);
         }
     }
+
+    public async Task SendMessage(Telegram.Bot.Types.Message message)
+    {
+        if (message.Text != null) await botClient.SendMessage(message.Chat.Id, message.Text);
+    }
 }

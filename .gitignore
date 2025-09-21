@@ -4,6 +4,5 @@ publish
 .env
 .txt
 out
-docker-compose.yml
 .idea
 

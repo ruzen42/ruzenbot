@@ -1,15 +1,27 @@
 using Microsoft.Extensions.Logging;
+using RuzenBot.Services.Bot;
+using Telegram.Bot.Types;
 
 namespace RuzenBot.Services.ConsoleCommand;
 
-public class ConsoleService(ILogger<ConsoleService> logger) : IConsoleService, IDisposable
+public class ConsoleService(ILogger<ConsoleService> logger, IBotService botService) : IConsoleService, IDisposable
 {
+    
     private readonly CancellationTokenSource _cts = new();
     private Task _consoleTask;
+    private readonly List<ConsoleCommand> _commands = [];
+    
+    private record struct ConsoleCommand(string Name, string Description, Func<Task> Function);
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Starting Console Service...");
+        {
+            _commands.Add(new ConsoleCommand("help", "Show help", ShowHelp));
+            _commands.Add(new ConsoleCommand("exit", "Exit app", ExitImmediately));
+            _commands.Add(new ConsoleCommand("clear", "clear", ClearConsole));
+            _commands.Add(new ConsoleCommand("ping", "sent ping in telegram", PingBot));
+        }
         _consoleTask = RunConsoleAsync(_cts.Token);
         return Task.CompletedTask;
     }
@@ -19,10 +31,7 @@ public class ConsoleService(ILogger<ConsoleService> logger) : IConsoleService, I
         logger.LogInformation("Stopping Console Service...");
         await _cts.CancelAsync();
         
-        if (_consoleTask != null)
-        {
-            await _consoleTask;
-        }
+        if (_consoleTask != null) await _consoleTask;
     }
 
     private async Task RunConsoleAsync(CancellationToken cancellationToken)
@@ -31,13 +40,13 @@ public class ConsoleService(ILogger<ConsoleService> logger) : IConsoleService, I
         {
             try
             {
-                Console.Write("> ");
+                Console.Write(">>> ");
                 var input = await Task.Run(Console.ReadLine, cancellationToken);
                 
                 if (string.IsNullOrWhiteSpace(input))
                     continue;
-
-                await ProcessCommandAsync(input.Trim(), cancellationToken);
+                
+                await _commands.Find(x => x.Name.Equals(input.Trim(), StringComparison.CurrentCultureIgnoreCase)).Function();
             }
             catch (OperationCanceledException)
             {
@@ -45,42 +54,41 @@ public class ConsoleService(ILogger<ConsoleService> logger) : IConsoleService, I
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error processing console command");
+                logger.LogError("Error processing console command: {ex}", ex);
             }
         }
     }
 
-    private Task ProcessCommandAsync(string command, CancellationToken cancellationToken)
-    {
-        switch (command.ToLower())
-        {
-            case "help":
-                ShowHelp();
-                break;
-                
-            case "exit":
-            case "quit":
-                logger.LogInformation("Shutting down application...");
-                Environment.Exit(0);
-                break;
-        }
 
+    private Task ShowHelp()
+    {
+        Console.WriteLine("Available commands:");
+        _commands.ForEach(command => 
+            Console.WriteLine(command.Name + " - " + command.Description));
         return Task.CompletedTask;
     }
 
-    private void ShowHelp()
+    private Task ClearConsole()
     {
-        Console.WriteLine("Available commands:");
-        Console.WriteLine("  help     - Show this help");
-        Console.WriteLine("  status   - Show application status");
-        Console.WriteLine("  users    - List recent users");
-        Console.WriteLine("  user <id>- Get user info");
-        Console.WriteLine("  exit     - Shutdown application");
-        Console.WriteLine("  quit     - Shutdown application");
+        Console.Clear();
+        return Task.CompletedTask;
     }
 
-    public void Dispose()
+    private Task ExitImmediately()
     {
-        _cts?.Dispose();
+        Environment.Exit(0);
+        return Task.CompletedTask;
     }
+
+    private async Task PingBot()
+    {
+        var message = new Telegram.Bot.Types.Message
+        {
+            Text = "Pong!",
+            Chat = new Chat { Id = 1373776307 }
+        };
+        await botService.SendMessage(message);
+    }
+
+    public void Dispose() => _cts?.Dispose();
 }
