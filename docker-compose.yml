@@ -1,0 +1,32 @@
+services:
+  ruzenbot:
+    image: ruzen42/ruzenbot:latest
+    container_name: ruzenbot-botnet
+    env_file:
+      - .env  
+    depends_on:
+      - shellrunner
+      - github-api 
+    networks:
+      - botnet
+    restart: unless-stopped
+  shellrunner:
+    image: ruzen42/shell-runner:latest
+    container_name: shellrunner-botnet
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks:
+      - botnet
+  github-api:
+    image: ruzen42/github-api:latest
+    container_name: github-api-botnet
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - botnet
+    
+networks:
+  botnet:
+    driver: bridge
