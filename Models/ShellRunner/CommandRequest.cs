@@ -1,3 +1,3 @@
 namespace RuzenBot.Models.ShellRunner;
 
-public record struct CommandRequest(string Command);
+public readonly record struct CommandRequest(string Command);

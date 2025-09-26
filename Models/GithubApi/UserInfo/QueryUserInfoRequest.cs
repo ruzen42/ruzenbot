@@ -1,3 +1,3 @@
 namespace RuzenBot.Models.GithubApi.UserInfo;
 
-public record struct QueryUserInfoRequest(string Url);
+public readonly record struct QueryUserInfoRequest(string Url);

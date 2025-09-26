@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
 using RuzenBot.Services.GithubApi;
@@ -51,6 +52,7 @@ public class CommandService : ICommandService
     private void RegisterDefaultCommands()
     {
         RegisterCommand(new Models.Command("/man", "Get help", HandleHelpCommand));
+        RegisterCommand(new Models.Command("/rate", "Rate thing", HandlerRateCommand));
         RegisterCommand(new Models.Command("/ping", "Ping pong", HandlerPingCommand));
         RegisterCommand(new Models.Command("/sent", "Start program", HandlerShell));
         RegisterCommand(new Models.Command("/id", "Get ur id", HandlerIdGet));
@@ -60,6 +62,24 @@ public class CommandService : ICommandService
     }
     private async Task HandlerPingCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) =>
         await SendMessageWithReply("Pong", message, cancellationToken);
+
+    private async Task HandlerRateCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var text = message.Text!;
+        if (text.Length < 6)
+        {
+            await SendMessageWithReply("Write a thing", message, cancellationToken);
+            return;
+        }
+        var hash = (int)ConvertRange(Math.Abs(text.GetHashCode()) % int.MaxValue);
+        var output = $"{text[5..]} rate: {hash}/100";
+        
+        await SendMessageWithReply(output, message, cancellationToken);
+        return;
+        
+        double ConvertRange(double value, double fromMin = int.MinValue, double fromMax = int.MaxValue, double toMin = 0, double toMax = 100) => 
+            (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
+    }
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {

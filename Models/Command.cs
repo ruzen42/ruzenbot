@@ -2,11 +2,7 @@ using Telegram.Bot.Types;
 
 namespace RuzenBot.Models;
 
-public class Command(string name, string description, Func<Message, CancellationToken, Task> handler)
+public readonly record struct Command(string Name, string Description, Func<Message, CancellationToken, Task> Handler)
 {
-    public string Name { get; } = name;
-    private string Description { get; } = description;
-    public Func<Message, CancellationToken, Task> Handler { get; } = handler;
-
     public override string ToString() => $"{Name} - {Description}";
 }
