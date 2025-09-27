@@ -1,11 +1,13 @@
 using Microsoft.Extensions.Logging;
+using RuzenBot.Services.Command;
+using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.ShellRunnerExecute;
 using Telegram.Bot;
 using Telegram.Bot.Types.InlineQueryResults;
 
 namespace RuzenBot.Services.QueryInlineHandler;
 
-public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ILogger logger) : IQueryInlineHandler 
+public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ICommandService commandService, IGithubApiService githubApiService, ILogger logger) : IQueryInlineHandler 
 {
     
     public async Task HandleInlineQuery(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
@@ -20,14 +22,16 @@ public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerServic
         
         try
         {
-            var content = await shellRunnerService.Execute(inlineQuery.Query, cancellationToken);
-            var results = new List<InlineQueryResult>
-            {
+            var rateOutput = RateInline(inlineQuery.Query);
+            
+            List<InlineQueryResult> results =
+            [
                 new InlineQueryResultArticle(
-                    id: "1",
-                    title: "Output: \n" + (string.IsNullOrWhiteSpace(content.Output) ? content.Output : content.Error), 
-                    inputMessageContent: new InputTextMessageContent(content.ToString()!))
-            };
+                    id: "2",
+                    title: rateOutput, 
+                    inputMessageContent: new InputTextMessageContent(rateOutput))
+            ];
+            logger.LogInformation("Inline query results: \n\t{ShellOutput}", rateOutput);
 
             await botClient.AnswerInlineQuery(inlineQuery.Id, results, cancellationToken: cancellationToken);
         }
@@ -35,5 +39,17 @@ public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerServic
         {
             logger.LogError("Error while execute inline query: {ex}", ex.Message);
         }
+    }
+
+    private async Task<string> ShellRunnerInline(string query, CancellationToken cancellationToken)
+    {
+        var (output, error, exitCode) = await shellRunnerService.Execute(query, cancellationToken);
+        return exitCode == 0 ? output : output + error; 
+    }
+
+    private string RateInline(string query)
+    {
+        query = query.ToLower();
+        return $"{query} rate: {commandService.RateString(query)}/100";   
     }
 }

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
 using RuzenBot.Services.GithubApi;
@@ -65,21 +66,25 @@ public class CommandService : ICommandService
 
     private async Task HandlerRateCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var text = message.Text!;
-        if (text.Length < 6)
+        var text = message.Text![5..];
+        var hasReply = message.ReplyToMessage != null;
+        
+        if (text.Length == 0 && !hasReply)
         {
             await SendMessageWithReply("Write a thing", message, cancellationToken);
             return;
         }
-        var hash = (int)ConvertRange(Math.Abs(text.GetHashCode()) % int.MaxValue);
-        var output = $"{text[5..]} rate: {hash}/100";
+
+        if (hasReply)
+            text = message.ReplyToMessage.Text!;
+        
+        var output = $"{text.ToLower()} rate: {RateString(text)}/100";
         
         await SendMessageWithReply(output, message, cancellationToken);
-        return;
-        
-        double ConvertRange(double value, double fromMin = int.MinValue, double fromMax = int.MaxValue, double toMin = 0, double toMax = 100) => 
-            (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
     }
+
+    public int RateString(string text) => 
+        text == null ? 50 : (text.GetHashCode() & 0x7FFFFFFF) % 101;
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
