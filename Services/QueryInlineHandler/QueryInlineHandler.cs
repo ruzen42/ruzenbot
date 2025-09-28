@@ -1,20 +1,19 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.Command;
-using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.ShellRunnerExecute;
 using Telegram.Bot;
 using Telegram.Bot.Types.InlineQueryResults;
 
 namespace RuzenBot.Services.QueryInlineHandler;
 
-public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ICommandService commandService, IGithubApiService githubApiService, ILogger logger) : IQueryInlineHandler 
+public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerService shellRunnerService, ICommandService commandService, ILogger<QueryInlineHandler> logger) : IQueryInlineHandler 
 {
-    
     public async Task HandleInlineQuery(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
     {
         var inlineQuery = update.InlineQuery!;
+        var text = inlineQuery.Query;
         
-        if (inlineQuery == null)
+        if (string.IsNullOrWhiteSpace(text)) 
         {
             logger.LogError("Inline query is null");
             return;
@@ -22,7 +21,7 @@ public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerServic
         
         try
         {
-            var rateOutput = RateInline(inlineQuery.Query);
+            var rateOutput = RateInline(text);
             
             List<InlineQueryResult> results =
             [

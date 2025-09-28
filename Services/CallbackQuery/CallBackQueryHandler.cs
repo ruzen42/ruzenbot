@@ -3,7 +3,7 @@ using Telegram.Bot;
 
 namespace RuzenBot.Services.CallbackQuery;
 
-public class CallbackQueryHandler(ITelegramBotClient botClient, ILogger logger) : ICallbackQueryHandler
+public class CallbackQueryHandler(ITelegramBotClient botClient, ILogger<CallbackQueryHandler> logger) : ICallbackQueryHandler
 {
     public async Task HandleAsync(Telegram.Bot.Types.CallbackQuery callbackQuery, CancellationToken cancellationToken)
     {

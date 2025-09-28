@@ -5,8 +5,10 @@ using NeoSimpleLogger;
 using RuzenBot.Services;
 using RuzenBot.Services.Bot;
 using RuzenBot.Services.CallbackQuery;
+using RuzenBot.Services.Casino;
 using RuzenBot.Services.Command;
 using RuzenBot.Services.ConsoleCommand;
+using RuzenBot.Services.DbService;
 using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.Message;
 using RuzenBot.Services.QueryInlineHandler;
@@ -48,6 +50,8 @@ internal static class Program
                 services.AddHostedService<BotHostedService>();
                 //services.AddSingleton<IConsoleService, ConsoleService>();
                 services.AddSingleton<IQueryInlineHandler, QueryInlineHandler>();
+                services.AddSingleton<IBotDbService, BotDbService>();
+                services.AddSingleton<ICasinoService, CasinoService>();
 
                 services.AddSingleton<IBotService, BotService>();
 

@@ -1,12 +1,12 @@
-using System.Globalization;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
+using RuzenBot.Services.Casino;
 using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.ShellRunnerExecute;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using User = RuzenBot.Models.Casino.User;
 
 namespace RuzenBot.Services.Command;
 
@@ -14,16 +14,18 @@ public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly Dictionary<string, Models.Command> _commands;
-    private readonly ILogger _logger;
+    private readonly ILogger<CommandService> _logger;
     private readonly IShellRunnerService _shellRunnerService;
     private readonly IGithubApiService _githubApiService;
+    private readonly ICasinoService _casinoService;
     
-    public CommandService(ITelegramBotClient botClient, IShellRunnerService runner, ILogger logger, IGithubApiService githubApiService)
+    public CommandService(ITelegramBotClient botClient, IShellRunnerService runner, ILogger<CommandService> logger, IGithubApiService githubApiService, ICasinoService casinoService)
     {
         _botClient = botClient;
         _logger = logger;
         _shellRunnerService = runner;
         _githubApiService = githubApiService;
+        _casinoService = casinoService;
         _commands = new Dictionary<string, Models.Command>();
         RegisterDefaultCommands();
     }
@@ -43,7 +45,7 @@ public class CommandService : ICommandService
         catch (Exception ex)
         {
             _logger.LogError("Error executing command {CommandName} (in context {message}: {Exception}", commandName, message.Text, ex);
-            await SendMessageWithReply("Error", message,  cancellationToken);
+            await SendMessageWithReply($"Error: {ex.Message}", message,  cancellationToken);
         }
         return true;
     }
@@ -53,6 +55,8 @@ public class CommandService : ICommandService
     private void RegisterDefaultCommands()
     {
         RegisterCommand(new Models.Command("/man", "Get help", HandleHelpCommand));
+        RegisterCommand(new Models.Command("/register", "Register casino account", HandlerRegisterCommand));
+        RegisterCommand(new Models.Command("/balance", "Get my money", HandlerGetMyMoneyCommand));
         RegisterCommand(new Models.Command("/rate", "Rate thing", HandlerRateCommand));
         RegisterCommand(new Models.Command("/ping", "Ping pong", HandlerPingCommand));
         RegisterCommand(new Models.Command("/sent", "Start program", HandlerShell));
@@ -60,6 +64,35 @@ public class CommandService : ICommandService
         RegisterCommand(new Models.Command("/report", "Report message to admin", HandlerReport));
         RegisterCommand(new Models.Command("/gitrepo", "Get github repo (/gitrepo https://github.com/user/repo)", HandlerGithubRepoCommand));
         RegisterCommand(new Models.Command("/gituser", "Get github user (/gituser https://github.com/user)", HandlerGithubUserCommand));
+    }
+
+    private async Task HandlerGetMyMoneyCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var user = new User(message.From!.Id, 0); 
+        if (await _casinoService.EnsureUserRegisteredAndGetUserAsync(user) != (false, default))
+        {
+            var money = await _casinoService.GetUserMoneyAsync(message.From!.Id);
+            await SendMessageWithReply($"Your balance: {money}", message, cancellationToken);
+        }
+        else
+        {
+            await _casinoService.RegisterUserAsync(user);
+            await SendMessageWithReply("Register first", message, cancellationToken);
+        }
+    }
+
+    private async Task HandlerRegisterCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+    {
+        var user = new User(message.From!.Id, 100);
+        if (!(await _casinoService.EnsureUserRegisteredAndGetUserAsync(user)).isRegistered)
+        {
+            await _casinoService.RegisterUserAsync(user);
+            await SendMessageWithReply("Registered with money: \"100\"", message, cancellationToken);
+        }
+        else
+        {
+            await SendMessageWithReply("Already exist", message, cancellationToken);
+        }
     }
     private async Task HandlerPingCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken) =>
         await SendMessageWithReply("Pong", message, cancellationToken);
@@ -76,7 +109,7 @@ public class CommandService : ICommandService
         }
 
         if (hasReply)
-            text = message.ReplyToMessage.Text!;
+            text = message.ReplyToMessage?.Text!;
         
         var output = $"{text.ToLower()} rate: {RateString(text)}/100";
         
@@ -84,7 +117,7 @@ public class CommandService : ICommandService
     }
 
     public int RateString(string text) => 
-        text == null ? 50 : (text.GetHashCode() & 0x7FFFFFFF) % 101;
+        (text.GetHashCode() & 0x7FFFFFFF) % 101;
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {

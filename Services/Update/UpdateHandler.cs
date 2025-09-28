@@ -9,7 +9,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RuzenBot.Services.Update;
 
-public class UpdateHandler(IMessageHandler messageHandler, ILogger logger, ICallbackQueryHandler callbackQueryHandler, IQueryInlineHandler inlineHandler)
+public class UpdateHandler(IMessageHandler messageHandler, ILogger<UpdateHandler> logger, ICallbackQueryHandler callbackQueryHandler, IQueryInlineHandler inlineHandler)
     : IUpdateHandler
 {
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken)

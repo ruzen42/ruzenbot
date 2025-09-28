@@ -5,6 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <PublishTrimmed>false</PublishTrimmed>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

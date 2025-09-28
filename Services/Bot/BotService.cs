@@ -6,9 +6,8 @@ using Telegram.Bot.Types.Enums;
 
 namespace RuzenBot.Services.Bot;
 
-public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandler, ILogger logger) : IBotService
+public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandler, ILogger<BotService> logger) : IBotService
 {
-    private CancellationTokenSource _cancellationTokenSource;
     private const long YourId = 1373776307;
     private static readonly Chat YourChat = new() { Id = YourId };
 
@@ -28,8 +27,6 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
     {
         try
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-            
             await botClient.DeleteWebhook(cancellationToken: cancellationToken);
             
             var receiverOptions = new ReceiverOptions
@@ -42,7 +39,7 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
                 updateHandler.HandleUpdateAsync,
                 updateHandler.HandleErrorAsync,
                 receiverOptions,
-                _cancellationTokenSource.Token
+                cancellationToken 
             );
 
             var me = await botClient.GetMe(cancellationToken);
@@ -60,7 +57,6 @@ public class BotService(ITelegramBotClient botClient, IUpdateHandler updateHandl
     {
         try
         {
-            await _cancellationTokenSource?.CancelAsync()!;
             await SendMessage(ExitMessage);
             logger.LogInformation("Bot stopped successfully");
         }

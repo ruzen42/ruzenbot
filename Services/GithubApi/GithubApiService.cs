@@ -6,7 +6,7 @@ using RuzenBot.Models.GithubApi.UserInfo;
 
 namespace RuzenBot.Services.GithubApi;
 
-public class GithubApiService(ILogger logger) : IGithubApiService
+public class GithubApiService(ILogger<GithubApiService> logger) : IGithubApiService
 {
     private readonly HttpClient _httpClient = new();
     private const string Url = "http://github-api:8080/api/query/";

@@ -5,7 +5,7 @@ using RuzenBot.Models.ShellRunner;
 
 namespace RuzenBot.Services.ShellRunnerExecute;
 
-public class ShellRunnerService(ILogger logger) : IShellRunnerService
+public class ShellRunnerService(ILogger<ShellRunnerService> logger) : IShellRunnerService
 {
     private readonly HttpClient _httpClient = new();
     private readonly JsonSerializerOptions _options = new()

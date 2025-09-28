@@ -7,9 +7,11 @@ services:
     depends_on:
       - shellrunner
       - github-api 
+      - ruzenbot-db
     networks:
       - botnet
     restart: unless-stopped
+    
   shellrunner:
     image: ruzen42/shell-runner:latest
     container_name: shellrunner-botnet
@@ -26,6 +28,43 @@ services:
     restart: unless-stopped
     networks:
       - botnet
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_DB: botdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d botdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - botnet 
+
+  ruzenbot-db:
+    image: ruzen42/ruzenbot-db 
+    container_name: ruzenbot-db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DbConnection=Host=postgres;Port=5432;Database=botdb;Username=postgres;Password=postgres;Pooling=true;
+    ports:
+      - "80:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - botnet
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
     
 networks:
   botnet:
