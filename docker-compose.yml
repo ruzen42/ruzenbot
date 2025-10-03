@@ -16,7 +16,7 @@ services:
     image: ruzen42/shell-runner:latest
     container_name: shellrunner-botnet
     ports:
-      - "8081:8080"
+      - "8080:8080"
     restart: unless-stopped
     networks:
       - botnet
@@ -39,7 +39,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ruzenbot:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d botdb"]
       interval: 10s
@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  ruzenbot:
     
 networks:
   botnet:

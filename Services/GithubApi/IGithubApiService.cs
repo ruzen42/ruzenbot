@@ -1,5 +1,4 @@
-using RuzenBot.Models.GithubApi.RepoInfo;
-using RuzenBot.Models.GithubApi.UserInfo;
+using RuzenBot.Models.GithubApi;
 
 namespace RuzenBot.Services.GithubApi;
 
