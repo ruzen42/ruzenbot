@@ -8,16 +8,16 @@ namespace RuzenBot.Services.DbService;
 public class BotDbService : IBotDbService
 {
     private record EmptyResponse;
-    private readonly HttpClient _httpClient = new()
-    {
-        BaseAddress = new Uri("http://localhost/api/users"),
-        Timeout = TimeSpan.FromSeconds(30)
-    };
     private readonly ILogger<BotDbService> _logger;
+    private readonly HttpClient _httpClient;
 
-    public BotDbService(ILogger<BotDbService> logger)
+    public BotDbService(ILogger<BotDbService> logger, HttpClient httpClient)
     { 
         _logger = logger;
+        _httpClient = httpClient;
+        _httpClient.BaseAddress = new Uri("https://ruzenbot-db/api");
+        _httpClient.Timeout = TimeSpan.FromSeconds(10);
+        
         _logger.LogInformation("Trying to test database");
 
         if (GetUsers().GetAwaiter().GetResult() == null)

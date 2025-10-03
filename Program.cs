@@ -12,7 +12,7 @@ using RuzenBot.Services.DbService;
 using RuzenBot.Services.GithubApi;
 using RuzenBot.Services.Message;
 using RuzenBot.Services.QueryInlineHandler;
-using RuzenBot.Services.ShellRunnerExecute;
+using RuzenBot.Services.ShellRunner;
 using RuzenBot.Services.Update;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -49,6 +49,7 @@ internal static class Program
                 services.AddSingleton<IGithubApiService, GithubApiService>(); 
                 services.AddHostedService<BotHostedService>();
                 //services.AddSingleton<IConsoleService, ConsoleService>();
+                services.AddHttpClient<IShellRunnerService, ShellRunnerService>(client => client.Timeout = TimeSpan.FromSeconds(10));
                 services.AddSingleton<IQueryInlineHandler, QueryInlineHandler>();
                 services.AddSingleton<IBotDbService, BotDbService>();
                 services.AddSingleton<ICasinoService, CasinoService>();

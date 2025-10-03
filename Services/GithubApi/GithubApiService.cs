@@ -4,9 +4,8 @@ using RuzenBot.Models.GithubApi;
 
 namespace RuzenBot.Services.GithubApi;
 
-public class GithubApiService(ILogger<GithubApiService> logger) : IGithubApiService
+public class GithubApiService(ILogger<GithubApiService> logger, HttpClient httpClient) : IGithubApiService
 {
-    private readonly HttpClient _httpClient = new();
     private const string BaseUrl = "http://github-api:8080/api/";
 
     private readonly JsonSerializerOptions _options = new()
@@ -21,7 +20,7 @@ public class GithubApiService(ILogger<GithubApiService> logger) : IGithubApiServ
         {
             var requestUrl = $"{BaseUrl}repo?Url={Uri.EscapeDataString(url)}";
             
-            var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+            var response = await httpClient.GetAsync(requestUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -49,7 +48,7 @@ public class GithubApiService(ILogger<GithubApiService> logger) : IGithubApiServ
         {
             var requestUrl = $"{BaseUrl}user?Url={Uri.EscapeDataString(url)}";
             
-            var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+            var response = await httpClient.GetAsync(requestUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);

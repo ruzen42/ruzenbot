@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.Bot;
 using RuzenBot.Services.GithubApi;
-using RuzenBot.Services.ShellRunnerExecute;
+using RuzenBot.Services.ShellRunner;
 using Telegram.Bot.Types;
 
 namespace RuzenBot.Services.ConsoleCommand;

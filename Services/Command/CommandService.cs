@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using RuzenBot.Models.ShellRunner;
 using RuzenBot.Services.Casino;
 using RuzenBot.Services.GithubApi;
-using RuzenBot.Services.ShellRunnerExecute;
+using RuzenBot.Services.ShellRunner;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -180,16 +180,12 @@ public class CommandService : ICommandService
 
     private async Task HandlerShell(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var response = new CommandResponse
-        {
-            Output = "No Output",
-            ExitCode = 0
-        };
+        var response = new QueryShellResponse("No output", "", 0);
         
         if (!(message.Text!.Length <= _commands["/sent"].Name.Length))
             response = await _shellRunnerService.Execute(message.Text![5..].Trim(), cancellationToken); 
         
-        await SendMessageWithReply(response.ToString(), message, cancellationToken);
+        await SendMessageWithReply(response.Output!, message, cancellationToken);
     }
 
     private async Task HandleHelpCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RuzenBot.Services.Command;
-using RuzenBot.Services.ShellRunnerExecute;
+using RuzenBot.Services.ShellRunner;
 using Telegram.Bot;
 using Telegram.Bot.Types.InlineQueryResults;
 
