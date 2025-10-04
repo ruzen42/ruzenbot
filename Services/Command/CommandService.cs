@@ -18,7 +18,8 @@ public class CommandService : ICommandService
     private readonly IShellRunnerService _shellRunnerService;
     private readonly IGithubApiService _githubApiService;
     private readonly ICasinoService _casinoService;
-    
+    private static readonly ChatId AdminChatId = new(1373776307);
+
     public CommandService(ITelegramBotClient botClient, IShellRunnerService runner, ILogger<CommandService> logger, IGithubApiService githubApiService, ICasinoService casinoService)
     {
         _botClient = botClient;
@@ -184,8 +185,7 @@ public class CommandService : ICommandService
                          "\n" + message.Text![7..] + 
                          "\n" + message.ReplyToMessage!.Text + 
                          "\n@" + message.ReplyToMessage!.From!.Username;
-            var adminChatId = new ChatId(1373776307);
-            await _botClient.SendMessage(adminChatId, output, cancellationToken: cancellationToken);
+            await _botClient.SendMessage(AdminChatId, output, cancellationToken: cancellationToken);
             await SendMessageWithReply("Report successfully sent", message, cancellationToken);
         }
     }

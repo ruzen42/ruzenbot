@@ -16,6 +16,7 @@ services:
     image: ruzen42/shell-runner:latest
     container_name: shellrunner-botnet
     environment:
+      - ASPNETCORE_ENVIRONMENT=Development
       - HTTP_PORTS=8081
     ports:
       - "8081:8081"
