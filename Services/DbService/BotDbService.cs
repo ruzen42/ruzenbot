@@ -15,7 +15,7 @@ public class BotDbService : IBotDbService
     { 
         _logger = logger;
         _httpClient = httpClient;
-        _httpClient.BaseAddress = new Uri("https://ruzenbot-db/api");
+        _httpClient.BaseAddress = new Uri("http://ruzenbot-db:80/api");
         _httpClient.Timeout = TimeSpan.FromSeconds(10);
         
         _logger.LogInformation("Trying to test database");
