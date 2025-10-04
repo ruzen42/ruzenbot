@@ -4,6 +4,6 @@ namespace RuzenBot.Services.GithubApi;
 
 public interface IGithubApiService
 {
-    Task<QueryRepoInfoResponse> GetRepoData(string url, CancellationToken cancellationToken);
-    Task<QueryUserInfoResponse> GetUserData(string url, CancellationToken cancellationToken);
+    Task<QueryRepoInfoResponse> GetRepoData(string user, string repo, CancellationToken cancellationToken);
+    Task<QueryUserInfoResponse> GetUserData(string user, CancellationToken cancellationToken);
 }

@@ -15,8 +15,10 @@ services:
   shellrunner:
     image: ruzen42/shell-runner:latest
     container_name: shellrunner-botnet
+    environment:
+      - HTTP_PORTS=8081
     ports:
-      - "8081:8080"
+      - "8081:8081"
     restart: unless-stopped
     networks:
       - botnet
@@ -26,6 +28,8 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
+    environment:
+      - HTTP_PORTS=8080
     networks:
       - botnet
 
@@ -53,9 +57,10 @@ services:
     container_name: ruzenbot-db
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - HTTP_PORTS=8082
       - ConnectionStrings__DbConnection=Host=postgres;Port=5432;Database=botdb;Username=postgres;Password=postgres;Pooling=true;
     ports:
-      - "80:8080"
+      - "80:8082"
     depends_on:
       postgres:
         condition: service_healthy

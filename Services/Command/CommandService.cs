@@ -62,8 +62,8 @@ public class CommandService : ICommandService
         RegisterCommand(new Models.Command("/sent", "Start program", HandlerShell));
         RegisterCommand(new Models.Command("/id", "Get ur id", HandlerIdGet));
         RegisterCommand(new Models.Command("/report", "Report message to admin", HandlerReport));
-        RegisterCommand(new Models.Command("/gitrepo", "Get github repo (/gitrepo https://github.com/user/repo)", HandlerGithubRepoCommand));
-        RegisterCommand(new Models.Command("/gituser", "Get github user (/gituser https://github.com/user)", HandlerGithubUserCommand));
+        RegisterCommand(new Models.Command("/gitrepo", "Get github repo (/gitrepo user/repo)", HandlerGithubRepoCommand));
+        RegisterCommand(new Models.Command("/gituser", "Get github user (/gituser user)", HandlerGithubUserCommand));
     }
 
     private async Task HandlerGetMyMoneyCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
@@ -121,28 +121,40 @@ public class CommandService : ICommandService
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var url = message.Text![8..];
-        if (string.IsNullOrWhiteSpace(url))
+        var user = message.Text![9..];
+        if (string.IsNullOrWhiteSpace(user))
         {
             await SendMessageWithReply("Write a url", message, cancellationToken);
             return;
         }
-        var result = await _githubApiService.GetUserData(url, cancellationToken);
+        
+        var result = await _githubApiService.GetUserData(user, cancellationToken);
         
         await SendMessageWithReply(result.ToString(), message, cancellationToken);
     }
     
     private async Task HandlerGithubRepoCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var url = message.Text![8..];
-        if (string.IsNullOrWhiteSpace(url))
+        var input = message.Text![9..];
+        if (string.IsNullOrWhiteSpace(input))
         {
             await SendMessageWithReply("Write a url", message, cancellationToken);
             return;
         }
-        var result = await _githubApiService.GetRepoData(url, cancellationToken);
+        
+        var (user, repo) = Split(input);
+        
+        var result = await _githubApiService.GetRepoData(user, repo, cancellationToken);
         
         await SendMessageWithReply(result.ToString(), message, cancellationToken);
+        
+        return;
+
+        (string, string) Split(string ownerAndRepo)
+        {
+            var parts = ownerAndRepo.Split('/');
+            return (parts[0], parts[1]);
+        }
     }
 
     private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)

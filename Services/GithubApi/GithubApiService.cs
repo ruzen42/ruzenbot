@@ -14,11 +14,11 @@ public class GithubApiService(ILogger<GithubApiService> logger, HttpClient httpC
         PropertyNameCaseInsensitive = true
     };
     
-    public async Task<QueryRepoInfoResponse> GetRepoData(string url, CancellationToken cancellationToken)
+    public async Task<QueryRepoInfoResponse> GetRepoData(string user, string repo, CancellationToken cancellationToken)
     {
         try
         {
-            var requestUrl = $"{BaseUrl}repo?Url={Uri.EscapeDataString(url)}";
+            var requestUrl = $"{BaseUrl}repo?User={user}&Repo={repo}";
             
             var response = await httpClient.GetAsync(requestUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -42,11 +42,11 @@ public class GithubApiService(ILogger<GithubApiService> logger, HttpClient httpC
         return null!;
     }
 
-    public async Task<QueryUserInfoResponse> GetUserData(string url, CancellationToken cancellationToken)
+    public async Task<QueryUserInfoResponse> GetUserData(string user, CancellationToken cancellationToken)
     {
         try
         {
-            var requestUrl = $"{BaseUrl}user?Url={Uri.EscapeDataString(url)}";
+            var requestUrl = $"{BaseUrl}user?User={user}";
             
             var response = await httpClient.GetAsync(requestUrl, cancellationToken);
             response.EnsureSuccessStatusCode();

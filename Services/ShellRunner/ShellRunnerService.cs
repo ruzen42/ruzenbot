@@ -13,7 +13,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
         PropertyNameCaseInsensitive = true
     };
 
-    private const string BaseUrl = "http://shellrunner:8081/api/";
+    private const string BaseUrl = "http://shellrunner:8081/api";
 
     public async Task<QueryShellResponse> Execute(string command, CancellationToken cancellationToken)
     {
@@ -28,7 +28,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
             var json = JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await httpClient.PostAsync($"{BaseUrl}", content, cancellationToken);
+            var response = await httpClient.PostAsync(BaseUrl, content, cancellationToken);
             
             if (!response.IsSuccessStatusCode)
             {
