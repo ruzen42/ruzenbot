@@ -21,9 +21,9 @@ namespace RuzenBot;
 
 internal static class Program
 {
-    private abstract class Options
+    private class Options
     {
-        [Option('m', "no-microservices", Required = false, HelpText = "Not use microservices (default use).")]
+        [Option('m', "no-microservices", Required = false, HelpText = "Not use microservices (default use).", Default = true)]
         public bool MServicesOn { get; set; } = true;
     }
     
@@ -36,13 +36,13 @@ internal static class Program
             return;
         }
 
-        IHost host = null!;
+        IHost? host = null;
         Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
                 host = o.MServicesOn
                     ? CreateHostBuilder(tokenTelegram).Build()
                     : CreateHostBuilder(tokenTelegram, false).Build());
-        await host.RunAsync();
+        if (host != null) await host.RunAsync();
     }
 
     private static IHostBuilder CreateHostBuilder(string token, bool useMicroServices = true) =>
