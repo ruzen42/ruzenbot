@@ -105,16 +105,27 @@ public class CommandService : ICommandService
         
         if (text.Length == 0 && !hasReply)
         {
-            await SendMessageWithReply("Write a thing", message, cancellationToken);
+            await WriteAThing();
             return;
         }
 
         if (hasReply)
-            text = message.ReplyToMessage?.Text!;
+            text = message.ReplyToMessage?.Text;
+
+        if (text != null)
+        {
+            var output = $"{text} rate: {RateString(text.ToLower())}/100";
         
-        var output = $"{text} rate: {RateString(text.ToLower())}/100";
-        
-        await SendMessageWithReply(output, message, cancellationToken);
+            await SendMessageWithReply(output, message, cancellationToken);
+        }
+        else
+        {
+            await WriteAThing();
+        }
+
+        return;
+
+        async Task WriteAThing() => await SendMessageWithReply("Write a thing", message, cancellationToken);
     }
 
     public int RateString(string text) => 
