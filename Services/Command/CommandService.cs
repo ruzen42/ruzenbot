@@ -112,7 +112,7 @@ public class CommandService : ICommandService
         if (hasReply)
             text = message.ReplyToMessage?.Text!;
         
-        var output = $"{text.ToLower()} rate: {RateString(text)}/100";
+        var output = $"{text} rate: {RateString(text.ToLower())}/100";
         
         await SendMessageWithReply(output, message, cancellationToken);
     }

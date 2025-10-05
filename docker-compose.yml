@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     
   shellrunner:
-    image: ruzen42/shell-runner:latest
+    image: ruzen42/shellrunner:latest
     container_name: shellrunner-botnet
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

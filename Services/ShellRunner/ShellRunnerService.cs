@@ -34,7 +34,6 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
             {
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
                 logger.LogError("HTTP Error: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return new QueryShellResponse($"HTTP Error: {response.StatusCode}", "", (int)response.StatusCode);
             }
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
