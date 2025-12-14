@@ -3,20 +3,19 @@ services:
     image: ruzen42/ruzenbot:latest
     container_name: ruzenbot-botnet
     env_file:
-      - .env  
+      - .env
     depends_on:
       - shellrunner
-      - github-api 
+      - github-api
       - ruzenbot-db
     networks:
       - botnet
     restart: unless-stopped
-    
+
   shellrunner:
-    image: ruzen42/shellrunner:latest
+    image: ruzen42/shellrunner:haskell
     container_name: shellrunner-botnet
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
       - HTTP_PORTS=8081
     ports:
       - "8081:8081"
@@ -51,10 +50,10 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - botnet 
+      - botnet
 
   ruzenbot-db:
-    image: ruzen42/ruzenbot-db 
+    image: ruzen42/ruzenbot-db
     container_name: ruzenbot-db
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -71,7 +70,7 @@ services:
 
 volumes:
   ruzenbot:
-    
+
 networks:
   botnet:
     driver: bridge

@@ -9,7 +9,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
 {
     private readonly JsonSerializerOptions _options = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase, 
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true
     };
 
@@ -29,7 +29,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await httpClient.PostAsync(BaseUrl, content, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -44,7 +44,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
         catch (HttpRequestException ex)
         {
             logger.LogError(ex, "HTTP Request Error executing command");
-            throw; 
+            throw;
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -54,7 +54,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error executing command");
-            throw; 
+            throw;
         }
     }
 }

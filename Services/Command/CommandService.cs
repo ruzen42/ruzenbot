@@ -34,7 +34,7 @@ public class CommandService : ICommandService
     public async Task<bool> ExecuteCommandAsync(string commandName, Telegram.Bot.Types.Message message,
         CancellationToken cancellationToken)
     {
-        if (!_commands.TryGetValue(commandName, out var command)) return false; 
+        if (!_commands.TryGetValue(commandName, out var command)) return false;
         try
         {
             _logger.LogInformation($"Executing command: " +
@@ -69,7 +69,7 @@ public class CommandService : ICommandService
 
     private async Task HandlerGetMyMoneyCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var user = new User(message.From!.Id, 0); 
+        var user = new User(message.From!.Id, 0);
         if (await _casinoService.EnsureUserRegisteredAndGetUserAsync(user) != (false, default))
         {
             var money = await _casinoService.GetUserMoneyAsync(message.From!.Id);
@@ -102,7 +102,7 @@ public class CommandService : ICommandService
     {
         var text = message.Text![5..];
         var hasReply = message.ReplyToMessage != null;
-        
+
         if (text.Length == 0 && !hasReply)
         {
             await WriteAThing();
@@ -115,7 +115,7 @@ public class CommandService : ICommandService
         if (text != null)
         {
             var output = $"{text} rate: {RateString(text.ToLower())}/100";
-        
+
             await SendMessageWithReply(output, message, cancellationToken);
         }
         else
@@ -128,7 +128,7 @@ public class CommandService : ICommandService
         async Task WriteAThing() => await SendMessageWithReply("Write a thing", message, cancellationToken);
     }
 
-    public int RateString(string text) => 
+    public int RateString(string text) =>
         (text.GetHashCode() & 0x7FFFFFFF) % 101;
 
     private async Task HandlerGithubUserCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
@@ -139,12 +139,12 @@ public class CommandService : ICommandService
             await SendMessageWithReply("Write a url", message, cancellationToken);
             return;
         }
-        
+
         var result = await _githubApiService.GetUserData(user, cancellationToken);
-        
+
         await SendMessageWithReply(result.ToString(), message, cancellationToken);
     }
-    
+
     private async Task HandlerGithubRepoCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
         var input = message.Text![9..];
@@ -153,13 +153,13 @@ public class CommandService : ICommandService
             await SendMessageWithReply("Write a url", message, cancellationToken);
             return;
         }
-        
+
         var (user, repo) = Split(input);
-        
+
         var result = await _githubApiService.GetRepoData(user, repo, cancellationToken);
-        
+
         await SendMessageWithReply(result.ToString(), message, cancellationToken);
-        
+
         return;
 
         (string, string) Split(string ownerAndRepo)
@@ -171,8 +171,8 @@ public class CommandService : ICommandService
 
     private async Task HandlerIdGet(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var result = (message.ReplyToMessage ?? message).From!.Id.ToString(); 
-        
+        var result = (message.ReplyToMessage ?? message).From!.Id.ToString();
+
         await SendMessageWithReply(result, message, cancellationToken);
     }
 
@@ -189,12 +189,12 @@ public class CommandService : ICommandService
                 await SendMessageWithReply("You can't write a report or throw it in", message, cancellationToken);
                 return;
             }
-            
-            var output = 
-                         "Report summary\n@" + 
-                         message.From!.Username + 
-                         "\n" + message.Text![7..] + 
-                         "\n" + message.ReplyToMessage!.Text + 
+
+            var output =
+                         "Report summary\n@" +
+                         message.From!.Username +
+                         "\n" + message.Text![7..] +
+                         "\n" + message.ReplyToMessage!.Text +
                          "\n@" + message.ReplyToMessage!.From!.Username;
             await _botClient.SendMessage(AdminChatId, output, cancellationToken: cancellationToken);
             await SendMessageWithReply("Report successfully sent", message, cancellationToken);
@@ -204,10 +204,10 @@ public class CommandService : ICommandService
     private async Task HandlerShell(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
         var response = new QueryShellResponse("No output", "", 0);
-        
+
         if (!(message.Text!.Length <= _commands["/sent"].Name.Length))
-            response = await _shellRunnerService.Execute(message.Text![5..].Trim(), cancellationToken); 
-        
+            response = await _shellRunnerService.Execute(message.Text![5..].Trim(), cancellationToken);
+
         await SendMessageWithReply(response.Output!, message, cancellationToken);
     }
 
@@ -227,5 +227,5 @@ public class CommandService : ICommandService
         };
 
         await _botClient.SendMessage(messageToReply.Chat.Id, output, replyParameters: replyParameters, cancellationToken: cancellationToken);
-    } 
+    }
 }
