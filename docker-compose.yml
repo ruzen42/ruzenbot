@@ -1,6 +1,6 @@
 services:
   ruzenbot:
-    image: ruzen42/ruzenbot:latest
+    build: . #image: ruzen42/ruzenbot:latest
     container_name: ruzenbot-botnet
     env_file:
       - .env

@@ -9,7 +9,7 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
 {
     private readonly JsonSerializerOptions _options = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true
     };
 
@@ -19,13 +19,13 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
     {
         if (string.IsNullOrWhiteSpace(command))
         {
-            return new QueryShellResponse("Command cannot be empty", "", 1);
+            return new QueryShellResponse(null, 1, "Command cannot be empty");
         }
 
         try
         {
             var request = new QueryShellRequest(command);
-            var json = JsonSerializer.Serialize(request);
+            var json = JsonSerializer.Serialize(request, _options);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await httpClient.PostAsync(BaseUrl, content, cancellationToken);
@@ -35,26 +35,26 @@ public class ShellRunnerService(ILogger<ShellRunnerService> logger, HttpClient h
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
                 logger.LogError("HTTP Error: {StatusCode} - {Content}", response.StatusCode, errorContent);
             }
-
+            
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<QueryShellResponse>(responseJson, _options);
-
+            
             return result!;
         }
         catch (HttpRequestException ex)
         {
             logger.LogError(ex, "HTTP Request Error executing command");
-            throw;
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogError("Request timeout executing command");
-            return new QueryShellResponse("Request timeout", "", 2);
+            return new QueryShellResponse(null, 2, "Timeout");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error executing command");
-            throw;
         }
+        
+        return new QueryShellResponse(null, 1, null);
     }
 }

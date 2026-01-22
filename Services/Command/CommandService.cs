@@ -203,7 +203,7 @@ public class CommandService : ICommandService
 
     private async Task HandlerShell(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var response = new QueryShellResponse("No output", "", 0);
+        var response = new QueryShellResponse("No output", 0, "no");
 
         if (!(message.Text!.Length <= _commands["/sent"].Name.Length))
             response = await _shellRunnerService.Execute(message.Text![5..].Trim(), cancellationToken);

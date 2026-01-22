@@ -42,8 +42,8 @@ public class QueryInlineHandler(ITelegramBotClient botClient, IShellRunnerServic
 
     private async Task<string> ShellRunnerInline(string query, CancellationToken cancellationToken)
     {
-        var (output, error, exitCode) = await shellRunnerService.Execute(query, cancellationToken);
-        return (exitCode == 0 ? output : output + error) ?? string.Empty; 
+        var (output, exitCode, err) = await shellRunnerService.Execute(query, cancellationToken);
+        return (exitCode == 0 ? output : output + err) ?? string.Empty; 
     }
 
     private string RateInline(string query)
