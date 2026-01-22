@@ -1,6 +1,6 @@
 services:
   ruzenbot:
-    build: . #image: ruzen42/ruzenbot:latest
+    image: ruzen42/ruzenbot:latest
     container_name: ruzenbot-botnet
     env_file:
       - .env
@@ -56,9 +56,8 @@ services:
     image: ruzen42/ruzenbot-db
     container_name: ruzenbot-db
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - HTTP_PORTS=8082
-      - ConnectionStrings__DbConnection=Host=postgres;Port=5432;Database=botdb;Username=postgres;Password=postgres;Pooling=true;
+      HTTP_PORTS: 8082
+      ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=botdb;Username=postgres;Password=postgres;Pooling=true;
     ports:
       - "80:8082"
     depends_on:
