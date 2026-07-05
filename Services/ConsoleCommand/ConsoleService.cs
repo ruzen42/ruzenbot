@@ -17,7 +17,7 @@ public class ConsoleService(
     private readonly CancellationTokenSource _cts = new();
     private readonly string _username = Environment.UserName;
     private readonly List<ConsoleCommand> _commands = [];
-    private const long YourId = 1373776307;
+    private const long YourId = 1373776307; // in future, add it in constructor
     
     private record struct ConsoleCommand(string Name, string Description, Func<Task> Function);
 
@@ -132,7 +132,7 @@ public class ConsoleService(
     {
         try
         {
-            var content = await githubApiService.GetUserData("https://github.com/ruzen42", _cts.Token);
+            var content = await githubApiService.GetRepoData("https://github.com/ruzen42", _cts.Token);
             Console.WriteLine(content.ToString());
         }
         catch (Exception ex)

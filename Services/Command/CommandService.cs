@@ -69,17 +69,16 @@ public class CommandService : ICommandService
 
     private async Task HandlerGetMyMoneyCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
     {
-        var user = new User(message.From!.Id, 0);
-        if (await _casinoService.EnsureUserRegisteredAndGetUserAsync(user) != (false, default))
-        {
-            var money = await _casinoService.GetUserMoneyAsync(message.From!.Id);
-            await SendMessageWithReply($"Your balance: {money}", message, cancellationToken);
-        }
-        else
-        {
-            await _casinoService.RegisterUserAsync(user);
-            await SendMessageWithReply("Register first", message, cancellationToken);
-        }
+      var (isRegistered, user2) = await _casinoService.EnsureUserRegisteredAndGetUserAsync(user);
+      if (isRegistered)
+      {
+        var money = await _casinoService.GetUserMoneyAsync(message.From!.Id);
+        await SendMessageWithReply($"Your balance: {money}", message, cancellationToken);
+      }
+      else
+      {
+        await SendMessageWithReply("Register first", message, cancellationToken);
+      }
     }
 
     private async Task HandlerRegisterCommand(Telegram.Bot.Types.Message message, CancellationToken cancellationToken)

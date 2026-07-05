@@ -19,11 +19,6 @@ public class BotDbService : IBotDbService
         _httpClient.Timeout = TimeSpan.FromSeconds(10);
         
         _logger.LogInformation("Trying to test database");
-
-        if (GetUsers().GetAwaiter().GetResult() == null)
-        {
-            _logger.LogWarning("Database not work");
-        }
     }
     
     private readonly JsonSerializerOptions _jsonOptions = new()
