@@ -2,6 +2,7 @@ obj/
 bin/
 publish
 .env
+setup.sh
 .txt
 out
 .idea

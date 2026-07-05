@@ -51,7 +51,15 @@ public class ConsoleService(
                 if (string.IsNullOrWhiteSpace(input))
                     continue;
                 
-                await _commands.Find(x => x.Name.Equals(input.Trim(), StringComparison.CurrentCultureIgnoreCase)).Function();
+                var func = _commands.Find(x => 
+                    x.Name.Equals(input.Trim(), StringComparison.CurrentCultureIgnoreCase));
+                if (func.Function is null)
+                {
+                  Console.WriteLine("Unknown command");
+                  continue;
+                }
+                await func.Function();
+
             }
             catch (OperationCanceledException)
             {
@@ -73,13 +81,13 @@ public class ConsoleService(
         return Task.CompletedTask;
     }
 
-    private Task ClearConsole()
+    private static Task ClearConsole()
     {
         Console.Clear();
         return Task.CompletedTask;
     }
 
-    private Task ExitImmediately()
+    private static Task ExitImmediately()
     {
         Environment.Exit(0);
         return Task.CompletedTask;
