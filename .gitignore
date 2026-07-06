@@ -6,7 +6,7 @@ setup.sh
 .txt
 out
 .idea
-
+.local/
 
 
 # Added by cargo
