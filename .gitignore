@@ -7,3 +7,8 @@ setup.sh
 out
 .idea
 
+
+
+# Added by cargo
+
+/target
