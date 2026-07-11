@@ -1,6 +1,7 @@
 use crate::casino::{self, GameKind};
 use crate::state::AppState;
 use teloxide::prelude::*;
+use teloxide::types::ReplyParameters;
 use teloxide::utils::command::BotCommands;
 
 pub type HandlerResult = Result<(), teloxide::RequestError>;
@@ -48,7 +49,7 @@ fn extract_argument(msg: &Message) -> Option<String> {
 
 async fn reply(bot: &Bot, msg: &Message, text: impl Into<String>) -> HandlerResult {
     bot.send_message(msg.chat.id, text)
-        .reply_to_message_id(msg.id)
+        .reply_parameters(ReplyParameters::new(msg.id))
         .await?;
     Ok(())
 }
@@ -168,7 +169,7 @@ async fn handle_game(bot: Bot, msg: Message, state: AppState, kind: GameKind) ->
 
 async fn handle_sent(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     if msg.chat.id != state.admin_chat_id {
-        return reply(&bot, &msg, "Команда доступна только администратору, пока что").await;
+        return reply(&bot, &msg, "Команда доступна только администратору").await;
     }
 
     let Some(command) = extract_argument(&msg) else {

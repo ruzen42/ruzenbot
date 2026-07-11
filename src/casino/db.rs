@@ -1,9 +1,9 @@
 use redb::{Database, ReadableTable, TableDefinition};
 use std::path::Path;
 use thiserror::Error;
- 
+
 const BALANCES: TableDefinition<u64, i64> = TableDefinition::new("balances");
- 
+
 #[derive(Debug, Error)]
 pub enum CasinoDbError {
     #[error("database open error: {0}")]
@@ -17,11 +17,11 @@ pub enum CasinoDbError {
     #[error("storage error: {0}")]
     Storage(#[from] redb::StorageError),
 }
- 
+
 pub struct CasinoDb {
     db: Database,
 }
- 
+
 impl CasinoDb {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, CasinoDbError> {
         let db = Database::create(path)?;
@@ -32,17 +32,13 @@ impl CasinoDb {
         write_txn.commit()?;
         Ok(Self { db })
     }
- 
+
     pub fn get_balance(&self, user_id: u64) -> Result<Option<i64>, CasinoDbError> {
         let read_txn = self.db.begin_read()?;
         let table = read_txn.open_table(BALANCES)?;
         Ok(table.get(user_id)?.map(|v| v.value()))
     }
- 
-    pub fn is_registered(&self, user_id: u64) -> Result<bool, CasinoDbError> {
-        Ok(self.get_balance(user_id)?.is_some())
-    }
- 
+
     pub fn register(&self, user_id: u64, starting_balance: i64) -> Result<bool, CasinoDbError> {
         let write_txn = self.db.begin_write()?;
         let registered = {
@@ -57,7 +53,7 @@ impl CasinoDb {
         write_txn.commit()?;
         Ok(registered)
     }
- 
+
     pub fn set_balance(&self, user_id: u64, balance: i64) -> Result<(), CasinoDbError> {
         let write_txn = self.db.begin_write()?;
         {
