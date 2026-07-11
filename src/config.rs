@@ -21,7 +21,7 @@ impl Config {
         let db_path = std::env::var("DB_PATH").unwrap_or_else(|_| "casino.redb".to_string());
 
         let shell_runner_url = std::env::var("SHELL_RUNNER_URL")
-            .unwrap_or_else(|_| "http://localhost:8081/api/shell".to_string());
+            .unwrap_or_else(|_| "http://shellrunner:8080/api".to_string());
 
         Ok(Self { token, admin_chat_id, db_path, shell_runner_url })
     }

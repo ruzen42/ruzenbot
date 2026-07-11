@@ -8,7 +8,9 @@ struct ShellRequest<'a> {
 
 #[derive(Deserialize, Debug)]
 pub struct ShellResponse {
-    pub output: String,
+    pub output: Option<String>,
+    pub err: Option<String>,
+    #[serde(rename = "exitCode")]
     pub exit_code: i32,
 }
 
