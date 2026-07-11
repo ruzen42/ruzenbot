@@ -1,6 +1,4 @@
 {
-  description = "RuzenBot (Rust edition) - Telegram bot on teloxide + redb";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
@@ -16,13 +14,7 @@
 
         nativeBuildDeps = with pkgs; [
           clang
-          llvmPackages.bintools 
-          pkg-config
-        ];
-
-        buildDeps = with pkgs; [
-          openssl
-          openssl.dev
+          llvmPackages.bintools
         ];
 
         ruzenbot-rs = pkgs.rustPlatform.buildRustPackage {
@@ -36,16 +28,12 @@
           };
 
           nativeBuildInputs = nativeBuildDeps;
-          buildInputs = buildDeps;
-
-          OPENSSL_NO_VENDOR = 1;
-          PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
 
           CC = "${pkgs.clang}/bin/clang";
           RUSTFLAGS = "-C linker=${pkgs.clang}/bin/clang -C link-arg=-fuse-ld=lld";
 
           meta = with pkgs.lib; {
-            description = "Telegram bot: RuzenBot, rewritten in Rust with teloxide + redb";
+            description = "Telegram bot backend";
             license = licenses.mit;
             mainProgram = "ruzenbot-rs";
           };
@@ -62,16 +50,10 @@
 
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = nativeBuildDeps ++ [ rustToolchain cargoBin ];
-          buildInputs = buildDeps;
 
-          OPENSSL_NO_VENDOR = 1;
-          PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
           CC = "${pkgs.clang}/bin/clang";
           RUSTFLAGS = "-C linker=${pkgs.clang}/bin/clang -C link-arg=-fuse-ld=lld";
 
-          shellHook = ''
-            echo "set TOKEN, ADMIN_CHAT_ID, SHELL_RUNNER_URL, DB_PATH"
-          '';
         };
       });
 }
