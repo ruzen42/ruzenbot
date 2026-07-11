@@ -1,14 +1,6 @@
-obj/
-bin/
-publish
+result
+target/
 .env
-setup.sh
 .txt
-out
-.idea
+setup.sh
 .local/
-
-
-# Added by cargo
-
-/target
