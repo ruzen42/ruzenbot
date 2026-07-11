@@ -1,4 +1,3 @@
-
 use teloxide::types::ChatId;
 
 pub struct Config {
