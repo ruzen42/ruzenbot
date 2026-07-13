@@ -4,7 +4,15 @@ RUN apk add --no-cache musl-dev pkgconfig openssl-dev
 
 WORKDIR /usr/src/app
 
-COPY . .
+COPY Cargo.lock Cargo.toml ./
+
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+
+RUN cargo build
+
+RUN rm -rf src/*.rs target/
+
+COPY src ./src
 
 RUN cargo build --release
 

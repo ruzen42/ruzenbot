@@ -28,8 +28,11 @@ pub enum Command {
     AllOrNothing,
     #[command(description = "сыграть в 'пятьдесят на пятьдесят' (x1.5 / x0.5)")]
     FiftyFifty,
+    #[command(description = "сыграть в 'двадцать на восьмьдесят' (x1.1 / x0.2)")]
+    TwentyEighteen,
     #[command(description = "выполнить shell-команду через shell-runner (только админ)")]
     Sent,
+    Give
 }
 
 fn extract_argument(msg: &Message) -> Option<String> {
@@ -69,8 +72,68 @@ pub async fn dispatch(
         Command::Balance => handle_balance(bot, msg, state).await,
         Command::AllOrNothing => handle_game(bot, msg, state, GameKind::AllOrNothing).await,
         Command::FiftyFifty => handle_game(bot, msg, state, GameKind::FiftyFifty).await,
+        Command::TwentyEighteen => handle_game(bot, msg, state, GameKind::TwentyEighteen).await,
         Command::Sent => handle_sent(bot, msg, state).await,
+        Command::Give => handle_give(bot, msg, state).await,
     }
+}
+
+
+
+async fn handle_give(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
+    let Some(sender) = msg.from.as_ref() else {
+        return reply(&bot, &msg, "Не удалось определить отправителя").await;
+    };
+    let sender_id = sender.id.0;
+    let Some(target_msg) = msg.reply_to_message() else {
+        return reply(&bot, &msg, "Ответь на сообщение того, кому хочешь передать деньги: /give <сумма>").await;
+    };
+    let Some(recipient) = target_msg.from.as_ref() else {
+        return reply(&bot, &msg, "Не удалось определить получателя").await;
+    };
+    let recipient_id = recipient.id.0;
+    let is_admin = sender_id == state.admin_chat_id.0 as u64;
+
+    if recipient_id == sender_id && !is_admin {
+        return reply(&bot, &msg, "Себе передавать деньги нельзя").await;
+    };
+
+    let Some(amount_str) = msg.text().and_then(|t| t.split_once(char::is_whitespace)).map(|(_, rest)| rest.trim()) else {
+        return reply(&bot, &msg, "Использование: /give <сумма> (ответом на сообщение получателя)").await;
+    };
+
+    let Ok(amount) = amount_str.parse::<i64>() else {
+        return reply(&bot, &msg, "Сумма должна быть целым положительным числом").await;
+    };
+
+    if amount <= 0 {
+        return reply(&bot, &msg, "Сумма должна быть положительной").await;
+    };
+
+    let recipient_balance = match state.casino_db.get_balance(recipient_id) {
+        Ok(Some(b)) => b, Ok(None) => return reply(&bot, &msg, "Получатель ещё не зарегистрирован (/register)").await, Err(e) => {
+            log::error!("casino get_balance failed for recipient {recipient_id}: {e}"); return reply(&bot, &msg, "Ошибка базы данных, попробуй позже").await; }
+    };
+
+    if is_admin {
+        if let Err(e) = state.casino_db.set_balance(recipient_id, recipient_balance + amount) {
+            log::error!("casino set_balance failed for recipient {recipient_id}: {e}");
+            return reply(&bot, &msg, "Ошибка базы данных, попробуй позже").await;
+        }
+        return reply(&bot, &msg, format!("Админ выдал {amount} пользователю. Новый баланс получателя: {}", recipient_balance + amount)).await;
+    };
+
+    let sender_balance = match state.casino_db.get_balance(sender_id) {
+        Ok(Some(b)) => b, Ok(None) => return reply(&bot, &msg, "Ты не зарегистрирован, используй /register").await, Err(e) => {
+            log::error!("casino get_balance failed for sender {sender_id}: {e}"); return reply(&bot, &msg, "Ошибка базы данных, попробуй позже").await;
+        }
+    };
+
+    if sender_balance < amount {
+        return reply(&bot, &msg, format!("Недостаточно средств: баланс {sender_balance}, нужно {amount}")).await;
+    };
+
+    if let Err(e) = state.casino_db.set_balance(sender_id, sender_balance - amount) { log::error!("casino set_balance failed for sender {sender_id}: {e}"); return reply(&bot, &msg, "Ошибка базы данных, попробуй позже").await; } if let Err(e) = state.casino_db.set_balance(recipient_id, recipient_balance + amount) { log::error!("casino set_balance failed for recipient {recipient_id}: {e}"); return reply(&bot, &msg, "Ошибка базы данных, попробуй позже").await; } reply(&bot, &msg, format!("Передано {amount}. Твой баланс: {}", sender_balance - amount)).await
 }
 
 async fn handle_man(bot: Bot, msg: Message) -> HandlerResult {
