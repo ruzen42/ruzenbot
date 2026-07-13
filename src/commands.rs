@@ -94,10 +94,6 @@ async fn handle_give(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     let recipient_id = recipient.id.0;
     let is_admin = sender_id == state.admin_chat_id.0 as u64;
 
-    if recipient_id == sender_id && !is_admin {
-        return reply(&bot, &msg, "Себе передавать деньги нельзя").await;
-    };
-
     let Some(amount_str) = msg.text().and_then(|t| t.split_once(char::is_whitespace)).map(|(_, rest)| rest.trim()) else {
         return reply(&bot, &msg, "Использование: /give <сумма> (ответом на сообщение получателя)").await;
     };

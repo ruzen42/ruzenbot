@@ -10,7 +10,7 @@ RUN mkdir src && echo "fn main() {}" > src/main.rs
 
 RUN cargo build
 
-RUN rm -rf src/*.rs target/
+RUN rm -rf src/*.rs
 
 COPY src ./src
 
