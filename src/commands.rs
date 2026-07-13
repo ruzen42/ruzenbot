@@ -100,7 +100,7 @@ async fn handle_rate(bot: Bot, msg: Message) -> HandlerResult {
         return reply(&bot, &msg, "Напиши что оценивать: /rate <текст> или ответь на сообщение").await;
     };
     let score = rate_string(&text.to_lowercase());
-    reply(&bot, &msg, format!("\"{text}\" — {score}/100")).await
+    reply(&bot, &msg, format!("\"{text}\" --- {score}/100")).await
 }
 
 async fn handle_register(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
