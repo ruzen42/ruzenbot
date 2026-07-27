@@ -183,10 +183,11 @@ impl CasinoDb {
         let write_txn = self.db.begin_write()?;
         let outcome = {
             let mut table = write_txn.open_table(USERS)?;
-            let Some(raw) = table.get(user_id)? else {
+            let existing: Option<String> = table.get(user_id)?.map(|raw| raw.value().to_string());
+            let Some(raw_json) = existing else {
                 return Err(CasinoDbError::NotRegistered(user_id));
             };
-            let mut record: UserRecord = serde_json::from_str(raw.value())?;
+            let mut record: UserRecord = serde_json::from_str(&raw_json)?;
 
             if record.balance < BOOST_COST {
                 log::info!(
@@ -215,9 +216,10 @@ impl CasinoDb {
         let write_txn = self.db.begin_write()?;
         let found = {
             let mut table = write_txn.open_table(USERS)?;
-            match table.get(user_id)? {
-                Some(raw) => {
-                    let mut record: UserRecord = serde_json::from_str(raw.value())?;
+            let existing: Option<String> = table.get(user_id)?.map(|raw| raw.value().to_string());
+            match existing {
+                Some(raw_json) => {
+                    let mut record: UserRecord = serde_json::from_str(&raw_json)?;
                     record.boost_percent = DEFAULT_BOOST_PERCENT;
                     table.insert(user_id, serde_json::to_string(&record)?.as_str())?;
                     true
