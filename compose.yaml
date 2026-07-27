@@ -2,11 +2,10 @@ services:
   ruzenbot:
     image: ruzen42/ruzenbot:rust
     container_name: ruzenbot
-    restart: unless-stopped
     environment:
       TOKEN: ${TOKEN}
       ADMIN_CHAT_ID: ${ADMIN_CHAT_ID}
-      SHELL_RUNNER_URL: http://shellrunner:8080/api
+      SHELL_RUNNER_URL: http://shellrunner:8080
       DB_PATH: /data/casino.redb
     volumes:
       - ruzenbot-data:/data
@@ -19,8 +18,8 @@ services:
     image: ruzen42/shellrunner:haskell
     container_name: shellrunner
     restart: unless-stopped
-    expose:
-      - "8080"
+    ports:
+      - 8080:8080
     tmpfs:
       - /workspace:size=512m,uid=10001,gid=10001
     deploy:
@@ -28,7 +27,6 @@ services:
         limits:
           cpus: "2.0"
           memory: 2g
-    pids_limit: 256
     networks:
       - botnet
  
