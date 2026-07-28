@@ -35,7 +35,7 @@ pub enum Command {
     Sent,
     #[command(description = "передать деньги тому, кому отвечаешь: /give <сумма>")]
     Give,
-    #[command(description = "купить +1% к ежедневному бусту за 10000")]
+    #[command(description = "купить +10% к ежедневному бусту за 10000")]
     Boost,
     #[command(description = "сбросить свой буст обратно к 10%")]
     ResetBoost,

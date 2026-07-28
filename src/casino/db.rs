@@ -9,7 +9,7 @@ const USERS: TableDefinition<u64, &str> = TableDefinition::new("users");
 const SECONDS_PER_DAY: i64 = 86400;
 const DEFAULT_BOOST_PERCENT: i64 = 10;
 pub const BOOST_COST: i64 = 10_000;
-pub const BOOST_STEP: i64 = 1;
+pub const BOOST_STEP: i64 = 10;
 
 #[derive(Debug, Error)]
 pub enum CasinoDbError {

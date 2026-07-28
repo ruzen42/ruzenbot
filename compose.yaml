@@ -1,6 +1,7 @@
 services:
   ruzenbot:
-    image: ruzen42/ruzenbot:rust
+    #image: ruzen42/ruzenbot:rust
+    build: . 
     container_name: ruzenbot
     environment:
       TOKEN: ${TOKEN}
