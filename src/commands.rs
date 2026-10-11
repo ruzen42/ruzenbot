@@ -1,7 +1,11 @@
 use crate::casino::{self, GameKind};
 use crate::state::{AppState, DuelChallenge};
 use teloxide::prelude::*;
+<<<<<<< HEAD
 use teloxide::types::{CallbackQuery, ChatId, InlineKeyboardButton, InlineKeyboardMarkup, ReplyParameters};
+=======
+use teloxide::types::{CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, ReplyParameters};
+>>>>>>> 6839d71 (fix)
 use teloxide::utils::command::BotCommands;
 
 pub type HandlerResult = Result<(), teloxide::RequestError>;
@@ -35,12 +39,15 @@ pub enum Command {
     Sent,
     #[command(description = "передать деньги тому, кому отвечаешь: /give <сумма>")]
     Give,
+<<<<<<< HEAD
     #[command(description = "купить +10% к ежедневному бусту за 10000")]
     Boost,
     #[command(description = "сбросить свой буст обратно к 10%")]
     ResetBoost,
     #[command(description = "топ 10 игроков по балансу")]
     Top,
+=======
+>>>>>>> 6839d71 (fix)
 }
 
 fn extract_argument(msg: &Message) -> Option<String> {
@@ -87,9 +94,12 @@ pub async fn dispatch(bot: Bot, msg: Message, cmd: Command, state: AppState) -> 
         Command::Duel => handle_duel(bot, msg, state).await,
         Command::Sent => handle_sent(bot, msg, state).await,
         Command::Give => handle_give(bot, msg, state).await,
+<<<<<<< HEAD
         Command::Boost => handle_boost(bot, msg, state).await,
         Command::ResetBoost => handle_reset_boost(bot, msg, state).await,
         Command::Top => handle_top(bot, msg, state).await,
+=======
+>>>>>>> 6839d71 (fix)
     };
 
     match &result {
@@ -115,9 +125,12 @@ fn cmd_name(cmd: &Command) -> &'static str {
         Command::Duel => "duel",
         Command::Sent => "sent",
         Command::Give => "give",
+<<<<<<< HEAD
         Command::Boost => "boost",
         Command::ResetBoost => "reset_boost",
         Command::Top => "top",
+=======
+>>>>>>> 6839d71 (fix)
     }
 }
 
@@ -187,8 +200,12 @@ async fn handle_balance(bot: Bot, msg: Message, state: AppState) -> HandlerResul
     match state.casino_db.get_balance(user_id) {
         Ok(Some(balance)) => {
             log::info!("handle_balance: user={user_id} balance={balance}");
+<<<<<<< HEAD
             let boost = state.casino_db.get_boost_percent(user_id).ok().flatten().unwrap_or(10);
             reply(&bot, &msg, format!("Твой баланс: {balance} (буст: +{boost}%/день)")).await
+=======
+            reply(&bot, &msg, format!("Твой баланс: {balance}")).await
+>>>>>>> 6839d71 (fix)
         }
         Ok(None) => {
             log::info!("handle_balance: user={user_id} not registered");
@@ -592,6 +609,7 @@ async fn handle_give(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     reply(&bot, &msg, format!("Передано {amount}. Твой баланс: {}", sender_balance - amount)).await
 }
 
+<<<<<<< HEAD
 async fn handle_boost(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     let Some(user) = msg.from.as_ref() else {
         log::warn!("handle_boost: no sender info, chat={}", msg.chat.id.0);
@@ -693,6 +711,8 @@ async fn handle_top(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     reply(&bot, &msg, format!("Топ игроков:\n{}", lines.join("\n"))).await
 }
 
+=======
+>>>>>>> 6839d71 (fix)
 async fn handle_sent(bot: Bot, msg: Message, state: AppState) -> HandlerResult {
     if msg.chat.id != state.admin_chat_id {
         log::warn!("handle_sent: unauthorized attempt from chat={}", msg.chat.id.0);

@@ -7,9 +7,12 @@ use thiserror::Error;
 const USERS: TableDefinition<u64, &str> = TableDefinition::new("users");
 
 const SECONDS_PER_DAY: i64 = 86400;
+<<<<<<< HEAD
 const DEFAULT_BOOST_PERCENT: i64 = 10;
 pub const BOOST_COST: i64 = 10_000;
 pub const BOOST_STEP: i64 = 10;
+=======
+>>>>>>> 6839d71 (fix)
 
 #[derive(Debug, Error)]
 pub enum CasinoDbError {
@@ -29,16 +32,22 @@ pub enum CasinoDbError {
     NotRegistered(u64),
 }
 
+<<<<<<< HEAD
 fn default_boost_percent() -> i64 {
     DEFAULT_BOOST_PERCENT
 }
 
+=======
+>>>>>>> 6839d71 (fix)
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct UserRecord {
     balance: i64,
     last_accrual_unix: i64,
+<<<<<<< HEAD
     #[serde(default = "default_boost_percent")]
     boost_percent: i64,
+=======
+>>>>>>> 6839d71 (fix)
 }
 
 fn now_unix() -> i64 {
@@ -54,6 +63,7 @@ fn apply_daily_accrual(record: &mut UserRecord) -> u32 {
         return 0;
     }
     let days = (elapsed / SECONDS_PER_DAY) as u32;
+<<<<<<< HEAD
     let rate = 1.0 + (record.boost_percent as f64 / 100.0);
     for _ in 0..days {
         record.balance = (record.balance as f64 * rate).round() as i64 + 1;
@@ -65,6 +75,13 @@ fn apply_daily_accrual(record: &mut UserRecord) -> u32 {
 pub enum BuyBoostOutcome {
     Purchased { new_balance: i64, new_boost_percent: i64 },
     InsufficientFunds { balance: i64 },
+=======
+    for _ in 0..days {
+        record.balance = (record.balance as f64 * 1.10).round() as i64 + 1;
+    }
+    record.last_accrual_unix += days as i64 * SECONDS_PER_DAY;
+    days
+>>>>>>> 6839d71 (fix)
 }
 
 pub struct CasinoDb {
@@ -103,7 +120,10 @@ impl CasinoDb {
                 let record = UserRecord {
                     balance: starting_balance,
                     last_accrual_unix: now_unix(),
+<<<<<<< HEAD
                     boost_percent: DEFAULT_BOOST_PERCENT,
+=======
+>>>>>>> 6839d71 (fix)
                 };
                 let json = serde_json::to_string(&record)?;
                 table.insert(user_id, json.as_str())?;
@@ -150,6 +170,7 @@ impl CasinoDb {
         let write_txn = self.db.begin_write()?;
         {
             let mut table = write_txn.open_table(USERS)?;
+<<<<<<< HEAD
             let mut record = match table.get(user_id)? {
                 Some(raw) => serde_json::from_str::<UserRecord>(raw.value())?,
                 None => UserRecord {
@@ -159,6 +180,17 @@ impl CasinoDb {
                 },
             };
             record.balance = balance;
+=======
+            let last_accrual_unix = match table.get(user_id)? {
+                Some(raw) => {
+                    serde_json::from_str::<UserRecord>(raw.value())
+                        .map(|r| r.last_accrual_unix)
+                        .unwrap_or_else(|_| now_unix())
+                }
+                None => now_unix(),
+            };
+            let record = UserRecord { balance, last_accrual_unix };
+>>>>>>> 6839d71 (fix)
             let json = serde_json::to_string(&record)?;
             table.insert(user_id, json.as_str())?;
         }
@@ -167,6 +199,7 @@ impl CasinoDb {
         Ok(())
     }
 
+<<<<<<< HEAD
     pub fn get_boost_percent(&self, user_id: u64) -> Result<Option<i64>, CasinoDbError> {
         log::debug!("get_boost_percent: user={user_id}");
         let read_txn = self.db.begin_read()?;
@@ -252,6 +285,8 @@ impl CasinoDb {
         Ok(entries)
     }
 
+=======
+>>>>>>> 6839d71 (fix)
     pub fn transfer(&self, from: u64, to: u64, amount: i64) -> Result<(), CasinoDbError> {
         log::info!("transfer: from={from} to={to} amount={amount}");
         let write_txn = self.db.begin_write()?;
